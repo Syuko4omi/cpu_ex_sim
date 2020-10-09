@@ -43,7 +43,9 @@ int main(){
   rom[12] = convert_struct_to_int(binary_addi(T0, T0, 1));
   rom[13] = convert_struct_to_int(binary_jal(RA, -24)); //j L2
 //L3:
-  rom[14] = convert_struct_to_int(binary_add(A0, T4, ZERO));*/
+  rom[14] = convert_struct_to_int(binary_add(A0, T4, ZERO));
+  rom[15] = convert_struct_to_int(binary_jalr(ZERO, RA, 0));
+*/
 
   do{
     reg[0] = 0;
@@ -51,7 +53,6 @@ int main(){
     pc += 4;
     cnt += 1;
     printf("%d %d %d %d %d %d %d %d %d\n", pc/4, reg[0], reg[T0], reg[T1], reg[A0], reg[T3], reg[T4], reg[T5], reg[T6]);
-    /*printf("%d %d %d %d %d\n", pc,reg[0],reg[5],reg[6],reg[7]);*/
     opcode = extract_opcode(ir);
     int rd = extract_dest_reg(ir);
     int rs1 = extract_source_reg1(ir);
@@ -115,7 +116,6 @@ int main(){
       }
     }else if (opcode == I_BRANCH){
       int offset = (rd&0b11110) + ((func7&63)<<5) + ((rd&1)<<11) + ((func7&64)<<12);
-      printf("%d\n", offset);
       if (func3 == 0){
         if (reg[rs1] == reg[rs2]){
           pc += offset;
@@ -150,11 +150,11 @@ int main(){
       reg[rd] = pc;
       pc += offset;
     }else if (opcode == I_JALR){
-      int imm = (func7<<5) + rs2;
+      int imm = (func7<<5) + reg[rs2];
       reg[rd] = pc;
       pc = (reg[rs1]+imm);
     }else if (opcode == I_LOAD){
-      int imm = func7*32 + rs2;
+      int imm = (func7<<5) + reg[rs2];
       if (func3 == 2){
         reg[rs1] = ram[imm];
       }else{
@@ -168,7 +168,7 @@ int main(){
         break;
       }
     }
-  }while(cnt < 50);
+  }while(cnt < 60);
 
   return 0;
 }
