@@ -247,7 +247,7 @@ struct instruction_bit binary_beq(int reg1, int reg2, int imm){
   inst.source2_reg = reg2;
   inst.source1_reg = reg1;
   inst.function_3 = 0;
-  inst.destination_reg = (imm&0b1110)+((imm&2048)>>11);
+  inst.destination_reg = (imm&0b11110)+((imm&2048)>>11);
   inst.opcode = I_BRANCH;
   return inst;
 }
@@ -258,7 +258,7 @@ struct instruction_bit binary_bne(int reg1, int reg2, int imm){
   inst.source2_reg = reg2;
   inst.source1_reg = reg1;
   inst.function_3 = 1;
-  inst.destination_reg = (imm&0b1110)+((imm&2048)>>11);
+  inst.destination_reg = (imm&0b11110)+((imm&2048)>>11);
   inst.opcode = I_BRANCH;
   return inst;
 }
@@ -269,7 +269,7 @@ struct instruction_bit binary_blt(int reg1, int reg2, int imm){
   inst.source2_reg = reg2;
   inst.source1_reg = reg1;
   inst.function_3 = 4;
-  inst.destination_reg = (imm&0b1110)+((imm&2048)>>11);
+  inst.destination_reg = (imm&0b11110)+((imm&2048)>>11);
   inst.opcode = I_BRANCH;
   return inst;
 }
@@ -280,7 +280,7 @@ struct instruction_bit binary_bge(int reg1, int reg2, int imm){
   inst.source2_reg = reg2;
   inst.source1_reg = reg1;
   inst.function_3 = 5;
-  inst.destination_reg = (imm&0b1110)+((imm&2048)>>11);
+  inst.destination_reg = (imm&0b11110)+((imm&2048)>>11);
   inst.opcode = I_BRANCH;
   return inst;
 }

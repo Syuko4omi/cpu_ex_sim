@@ -2,54 +2,55 @@
 #include "riscv_assembler.h"
 
 int reg[32]; //registers for int
-int rom[256]; //for instruction
+int rom[256]; //for instruction(each instruction is 4byte)
 int ram[4096]; //for data_memory
 
 int main(){
-  short pc = 0; //program counter
+  short pc = 0; //program counter(in units of 4)
   int ir, opcode; //instruction register, opcode
 
-  int cnt = 0;
+  int cnt = 0; //tekitouna tokorode tomeyoune!
 
-/*
-//calculate sum from 1 to 10
+
+//(sample code)calculate sum from 1 to 10
   rom[0] = convert_struct_to_int(binary_addi(T0, ZERO, 0));
   rom[1] = convert_struct_to_int(binary_addi(T1, ZERO, 0));
   rom[2] = convert_struct_to_int(binary_addi(T2, ZERO, 10));
   rom[3] = convert_struct_to_int(binary_addi(T0, T0, 1));
   rom[4] = convert_struct_to_int(binary_add(T1, T1, T0));
-  rom[5] = convert_struct_to_int(binary_beq(T0, T2, 2));
-  rom[6] = convert_struct_to_int(binary_jal(RA, -4));
+  rom[5] = convert_struct_to_int(binary_beq(T0, T2, 8));
+  rom[6] = convert_struct_to_int(binary_jal(RA, -16));
   rom[7] = convert_struct_to_int(binary_add(A0, T1, ZERO));
-  rom[8] = convert_struct_to_int(binary_jalr(ZERO, RA, 0));*/
+  rom[8] = convert_struct_to_int(binary_jalr(ZERO, RA, 0)); //ret
 
-
-//calculate fibonacchi
+/*
+//(sample code)calculate fibonacchi
 //main:
   rom[0] = convert_struct_to_int(binary_addi(T3, ZERO, 10)); //li t3, 10
   rom[1] = convert_struct_to_int(binary_addi(T4, ZERO, 1));
-  rom[2] = convert_struct_to_int(binary_blt(T4, T3, 2));
+  rom[2] = convert_struct_to_int(binary_blt(T4, T3, 8));
   rom[3] = convert_struct_to_int(binary_add(T4, T3, ZERO)); //mv t4, t3
-  rom[4] = convert_struct_to_int(binary_jal(RA, 9)); //j L3
+  rom[4] = convert_struct_to_int(binary_jal(RA, 36)); //j L3
 //L1:
   rom[5] = convert_struct_to_int(binary_addi(T4, ZERO, 1));
   rom[6] = convert_struct_to_int(binary_addi(T5, ZERO, 1));
   rom[7] = convert_struct_to_int(binary_addi(T0, ZERO, 2));
 //L2:
-  rom[8] = convert_struct_to_int(binary_bge(T0, T3, 5));
+  rom[8] = convert_struct_to_int(binary_bge(T0, T3, 20));
   rom[9] = convert_struct_to_int(binary_add(T6, T4, ZERO));
   rom[10] = convert_struct_to_int(binary_add(T4, T4, T5));
   rom[11] = convert_struct_to_int(binary_add(T5, T6, ZERO));
   rom[12] = convert_struct_to_int(binary_addi(T0, T0, 1));
-  rom[13] = convert_struct_to_int(binary_jal(RA, -6)); //j L2
+  rom[13] = convert_struct_to_int(binary_jal(RA, -24)); //j L2
 //L3:
-  rom[14] = convert_struct_to_int(binary_add(A0, T4, ZERO));
+  rom[14] = convert_struct_to_int(binary_add(A0, T4, ZERO));*/
 
   do{
-    ir = rom[pc]; //fetch instruction
-    pc += 1;
+    reg[0] = 0;
+    ir = rom[pc/4]; //fetch instruction
+    pc += 4;
     cnt += 1;
-    printf("%d %d %d %d %d %d %d %d %d\n", pc, reg[0], reg[T0], reg[T1], reg[A0], reg[T3], reg[T4], reg[T5], reg[T6]);
+    printf("%d %d %d %d %d %d %d %d %d\n", pc/4, reg[0], reg[T0], reg[T1], reg[A0], reg[T3], reg[T4], reg[T5], reg[T6]);
     /*printf("%d %d %d %d %d\n", pc,reg[0],reg[5],reg[6],reg[7]);*/
     opcode = extract_opcode(ir);
     int rd = extract_dest_reg(ir);
@@ -113,7 +114,8 @@ int main(){
         reg[rd] = reg[rs1] & imm;
       }
     }else if (opcode == I_BRANCH){
-      int offset = (rd/2)*2 + (func7&63)*32 + (rd&1)*2048 + (func7&64)*4096; //bit[0] = 0
+      int offset = (rd&0b11110) + ((func7&63)<<5) + ((rd&1)<<11) + ((func7&64)<<12);
+      printf("%d\n", offset);
       if (func3 == 0){
         if (reg[rs1] == reg[rs2]){
           pc += offset;
@@ -166,8 +168,7 @@ int main(){
         break;
       }
     }
-  }while(cnt < 60);
-  //while(ir != convert_struct_to_int(binary_jalr(0, 1, 0)));
+  }while(cnt < 50);
 
   return 0;
 }
