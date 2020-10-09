@@ -6,47 +6,50 @@ int rom[256]; //for instruction
 int ram[4096]; //for data_memory
 
 int main(){
-  short pc; //program counter
+  short pc = 0; //program counter
   int ir, opcode; //instruction register, opcode
 
-  pc = 0;
   int cnt = 0;
 
 /*
 //calculate sum from 1 to 10
-  rom[0] = convert_struct_to_int(binary_addi(5, 0, 0));
-  rom[1] = convert_struct_to_int(binary_addi(6, 0, 0));
-  rom[2] = convert_struct_to_int(binary_addi(7, 0, 10));
-  rom[3] = convert_struct_to_int(binary_addi(5, 5, 1));
-  rom[4] = convert_struct_to_int(binary_add(6, 6, 5));
-  rom[5] = convert_struct_to_int(binary_beq(5, 7, 2));
-  rom[6] = convert_struct_to_int(binary_jal(3, -4));
-  rom[7] = convert_struct_to_int(binary_add(10, 6, 0));
-  rom[8] = convert_struct_to_int(binary_jalr(0, 1, 0));*/
+  rom[0] = convert_struct_to_int(binary_addi(T0, ZERO, 0));
+  rom[1] = convert_struct_to_int(binary_addi(T1, ZERO, 0));
+  rom[2] = convert_struct_to_int(binary_addi(T2, ZERO, 10));
+  rom[3] = convert_struct_to_int(binary_addi(T0, T0, 1));
+  rom[4] = convert_struct_to_int(binary_add(T1, T1, T0));
+  rom[5] = convert_struct_to_int(binary_beq(T0, T2, 2));
+  rom[6] = convert_struct_to_int(binary_jal(RA, -4));
+  rom[7] = convert_struct_to_int(binary_add(A0, T1, ZERO));
+  rom[8] = convert_struct_to_int(binary_jalr(ZERO, RA, 0));*/
 
-  rom[0] = convert_struct_to_int(binary_addi(28, 0, 10));
-  rom[1] = convert_struct_to_int(binary_addi(29, 0, 1));
-  rom[2] = convert_struct_to_int(binary_blt(29, 28, 2));
-  rom[3] = convert_struct_to_int(binary_add(29, 28, 0));
-  rom[4] = convert_struct_to_int(binary_jal(3, 9));
-  rom[5] = convert_struct_to_int(binary_addi(29, 0, 1));
-  rom[6] = convert_struct_to_int(binary_addi(30, 0, 1));
-  rom[7] = convert_struct_to_int(binary_addi(5, 0, 2));
-  rom[8] = convert_struct_to_int(binary_bge(5, 28, 5));
-  rom[9] = convert_struct_to_int(binary_add(31, 29, 0));
-  rom[10] = convert_struct_to_int(binary_add(29, 29, 30));
-  rom[11] = convert_struct_to_int(binary_add(30, 31, 0));
-  rom[12] = convert_struct_to_int(binary_addi(5, 5, 1));
-  rom[13] = convert_struct_to_int(binary_jal(3, -6));
-  rom[14] = convert_struct_to_int(binary_add(10, 29, 0));
-  rom[15] = convert_struct_to_int(binary_jalr(0, 1, 0));
 
+//calculate fibonacchi
+//main:
+  rom[0] = convert_struct_to_int(binary_addi(T3, ZERO, 10)); //li t3, 10
+  rom[1] = convert_struct_to_int(binary_addi(T4, ZERO, 1));
+  rom[2] = convert_struct_to_int(binary_blt(T4, T3, 2));
+  rom[3] = convert_struct_to_int(binary_add(T4, T3, ZERO)); //mv t4, t3
+  rom[4] = convert_struct_to_int(binary_jal(RA, 9)); //j L3
+//L1:
+  rom[5] = convert_struct_to_int(binary_addi(T4, ZERO, 1));
+  rom[6] = convert_struct_to_int(binary_addi(T5, ZERO, 1));
+  rom[7] = convert_struct_to_int(binary_addi(T0, ZERO, 2));
+//L2:
+  rom[8] = convert_struct_to_int(binary_bge(T0, T3, 5));
+  rom[9] = convert_struct_to_int(binary_add(T6, T4, ZERO));
+  rom[10] = convert_struct_to_int(binary_add(T4, T4, T5));
+  rom[11] = convert_struct_to_int(binary_add(T5, T6, ZERO));
+  rom[12] = convert_struct_to_int(binary_addi(T0, T0, 1));
+  rom[13] = convert_struct_to_int(binary_jal(RA, -6)); //j L2
+//L3:
+  rom[14] = convert_struct_to_int(binary_add(A0, T4, ZERO));
 
   do{
     ir = rom[pc]; //fetch instruction
     pc += 1;
     cnt += 1;
-    printf("%d %d %d %d %d %d %d %d %d %d\n", pc,reg[0],reg[5],reg[6],reg[7], reg[10], reg[28],reg[29],reg[30],reg[31]);
+    printf("%d %d %d %d %d %d %d %d %d\n", pc, reg[0], reg[T0], reg[T1], reg[A0], reg[T3], reg[T4], reg[T5], reg[T6]);
     /*printf("%d %d %d %d %d\n", pc,reg[0],reg[5],reg[6],reg[7]);*/
     opcode = extract_opcode(ir);
     int rd = extract_dest_reg(ir);
@@ -61,15 +64,23 @@ int main(){
         }else{
           reg[rd] = (reg[rs1] - reg[rs2]);
         }
-      }/*else if (func3 == 1){
-        SLL;
+      }else if (func3 == 1){
+        reg[rd] = (reg[rs1] << reg[rs2]);
       }else if (func3 == 2){
-        SLT;
-      }*/else if (func3 == 4){
+        if (reg[rs1] > reg[rs2]){
+          reg[rd] = 1;
+        }else{
+          reg[rd] = 0;
+        }
+      }else if (func3 == 4){
         reg[rd] = (reg[rs1] ^ reg[rs2]);
-      }/*else if (func3 == 5){
-        SRL,SRA;
-      }*/else if (func3 == 6){
+      }else if (func3 == 5){
+        if (func7 == 0){
+          reg[rd] = (reg[rs1] >> reg[rs2]);
+        }else{
+          reg[rd] = ((unsigned)reg[rs1]) >> reg[rs2];
+        }
+      }else if (func3 == 6){
         reg[rd] = (reg[rs1] | reg[rs2]);
       }else{
         reg[rd] = (reg[rs1] & reg[rs2]);
@@ -78,16 +89,24 @@ int main(){
       int imm = (ir & 0b11111111111100000000000000000000) >> 20; //[31:20]
       if (func3 == 0){
         reg[rd] = reg[rs1] + imm;
-      }/*else if (func3 == 1){
-        SLLI;
+      }else if (func3 == 1){
+        reg[rd] = reg[rs1] << imm;
       }else if (func3 == 2){
-        SLTI;
-      }*/
+        if (reg[rs1] < imm){
+          reg[rd] = 1;
+        }else{
+          reg[rd] = 0;
+        }
+      }
       else if (func3 == 4){
         reg[rd] = reg[rs1] ^ imm;
-      }/*else if (func3 == 5){
-        SRLI,SRAI;
-      }*/
+      }else if (func3 == 5){
+        if (func7 == 0){
+          reg[rd] = reg[rs1] >> imm;
+        }else{
+          reg[rd] = ((unsigned)reg[rs1]) >> imm;
+        }
+      }
       else if (func3 == 6){
         reg[rd] = reg[rs1] | imm;
       }else if (func3 == 7){
@@ -124,8 +143,8 @@ int main(){
       pc += offset;
     }else if (opcode == I_JALR){
       int imm = (func7<<5) + rs2;
-      reg[rd] = pc + 1;
-      pc = (rs1+imm);
+      reg[rd] = pc;
+      pc = (reg[rs1]+imm);
     }else if (opcode == I_LOAD){
       int imm = func7*32 + rs2;
       if (func3 == 2){

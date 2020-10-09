@@ -8,6 +8,7 @@
 #define I_LOAD 0b0000011
 #define I_STORE 0b0100011
 
+//registers
 #define ZERO 0
 #define RA 1
 #define SP 2
@@ -62,19 +63,24 @@ int extract_func7(int bi);
 
 struct instruction_bit binary_add(int regd, int reg1, int reg2);
 struct instruction_bit binary_sub(int regd, int reg1, int reg2);
-//SLL,SLT
+struct instruction_bit binary_sll(int regd, int reg1, int reg2);
+struct instruction_bit binary_slt(int regd, int reg1, int reg2);
 struct instruction_bit binary_xor(int regd, int reg1, int reg2);
-//SRL,SRA
+struct instruction_bit binary_srl(int regd, int reg1, int reg2);
+struct instruction_bit binary_srl(int regd, int reg1, int reg2);
 struct instruction_bit binary_or(int regd, int reg1, int reg2);
 struct instruction_bit binary_and(int regd, int reg1, int reg2);
 
 
 struct instruction_bit binary_addi(int regd, int reg1, int imm);
-//SLTI
+struct instruction_bit binary_slti(int regd, int reg1, int imm);
 struct instruction_bit binary_xori(int regd, int reg1, int imm);
 struct instruction_bit binary_ori(int regd, int reg1, int imm);
 struct instruction_bit binary_andi(int regd, int reg1, int imm);
-//SLLI,SRLI,SRAI
+
+struct instruction_bit binary_slli(int regd, int reg1, int imm);
+struct instruction_bit binary_srli(int regd, int reg1, int imm);
+struct instruction_bit binary_srai(int regd, int reg1, int imm);
 
 struct instruction_bit binary_beq(int reg1, int reg2, int imm);
 struct instruction_bit binary_bne(int reg1, int reg2, int imm);

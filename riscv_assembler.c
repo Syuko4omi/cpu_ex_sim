@@ -76,7 +76,27 @@ struct instruction_bit binary_sub(int regd, int reg1, int reg2){
   return inst;
 }
 
-//SLL,SLT
+struct instruction_bit binary_sll(int regd, int reg1, int reg2){
+  struct instruction_bit inst;
+  inst.function_7 = 0;
+  inst.source2_reg = reg2;
+  inst.source1_reg = reg1;
+  inst.function_3 = 1;
+  inst.destination_reg = regd;
+  inst.opcode = I_OP;
+  return inst;
+}
+
+struct instruction_bit binary_slt(int regd, int reg1, int reg2){
+  struct instruction_bit inst;
+  inst.function_7 = 0;
+  inst.source2_reg = reg2;
+  inst.source1_reg = reg1;
+  inst.function_3 = 2;
+  inst.destination_reg = regd;
+  inst.opcode = I_OP;
+  return inst;
+}
 
 struct instruction_bit binary_xor(int regd, int reg1, int reg2){
   struct instruction_bit inst;
@@ -89,7 +109,27 @@ struct instruction_bit binary_xor(int regd, int reg1, int reg2){
   return inst;
 }
 
-//SRL,SRA
+struct instruction_bit binary_srl(int regd, int reg1, int reg2){
+  struct instruction_bit inst;
+  inst.function_7 = 0;
+  inst.source2_reg = reg2;
+  inst.source1_reg = reg1;
+  inst.function_3 = 5;
+  inst.destination_reg = regd;
+  inst.opcode = I_OP;
+  return inst;
+}
+
+struct instruction_bit binary_sra(int regd, int reg1, int reg2){
+  struct instruction_bit inst;
+  inst.function_7 = 0b0100000;
+  inst.source2_reg = reg2;
+  inst.source1_reg = reg1;
+  inst.function_3 = 4;
+  inst.destination_reg = regd;
+  inst.opcode = I_OP;
+  return inst;
+}
 
 struct instruction_bit binary_or(int regd, int reg1, int reg2){
   struct instruction_bit inst;
@@ -124,7 +164,16 @@ struct instruction_bit binary_addi(int regd, int reg1, int imm){
   return inst;
 }
 
-//SLTI
+struct instruction_bit binary_slti(int regd, int reg1, int imm){
+  struct instruction_bit inst;
+  inst.function_7 = imm&(4095-31);
+  inst.source2_reg = imm&31;
+  inst.source1_reg = reg1;
+  inst.function_3 = 2;
+  inst.destination_reg = regd;
+  inst.opcode = I_OPIMM;
+  return inst;
+}
 
 struct instruction_bit binary_xori(int regd, int reg1, int imm){
   struct instruction_bit inst;
@@ -159,7 +208,38 @@ struct instruction_bit binary_andi(int regd, int reg1, int imm){
   return inst;
 }
 
-//SLLI,SRLI,SRAI
+struct instruction_bit binary_slli(int regd, int reg1, int imm){
+  struct instruction_bit inst;
+  inst.function_7 = 0;
+  inst.source2_reg = imm&31;
+  inst.source1_reg = reg1;
+  inst.function_3 = 1;
+  inst.destination_reg = regd;
+  inst.opcode = I_OPIMM;
+  return inst;
+}
+
+struct instruction_bit binary_srli(int regd, int reg1, int imm){
+  struct instruction_bit inst;
+  inst.function_7 = 0;
+  inst.source2_reg = imm&31;
+  inst.source1_reg = reg1;
+  inst.function_3 = 3;
+  inst.destination_reg = regd;
+  inst.opcode = I_OPIMM;
+  return inst;
+}
+
+struct instruction_bit binary_srai(int regd, int reg1, int imm){
+  struct instruction_bit inst;
+  inst.function_7 = 0b0100000;
+  inst.source2_reg = imm&31;
+  inst.source1_reg = reg1;
+  inst.function_3 = 3;
+  inst.destination_reg = regd;
+  inst.opcode = I_OPIMM;
+  return inst;
+}
 
 struct instruction_bit binary_beq(int reg1, int reg2, int imm){
   struct instruction_bit inst;
