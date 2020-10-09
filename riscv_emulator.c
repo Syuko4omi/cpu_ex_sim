@@ -131,8 +131,14 @@ int main(){
           pc += offset;
         }
       }else{
-        ; //BLTU,BGEU
+        break;
       }
+    }else if (opcode == I_LUI){
+      int imm = (ir & 0b11111111111100000000000000000000) >> 20;
+      reg[rd] = imm<<12;
+    }else if (opcode == I_AUIPC){
+      int imm = (ir & 0b11111111111100000000000000000000) >> 20;
+      reg[rd] = pc + (imm<<12);
     }else if (opcode == I_JAL){
       int i_10_1 = (ir >> 21)&1023;
       int i_11 = (ir >> 20)&1;
@@ -160,8 +166,6 @@ int main(){
         break;
       }
     }
-    //I_LUI
-    //I_AUIPC
   }while(cnt < 60);
   //while(ir != convert_struct_to_int(binary_jalr(0, 1, 0)));
 

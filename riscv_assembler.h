@@ -87,7 +87,8 @@ struct instruction_bit binary_bne(int reg1, int reg2, int imm);
 struct instruction_bit binary_blt(int reg1, int reg2, int imm);
 struct instruction_bit binary_bge(int reg1, int reg2, int imm);
 
-//LUI,AUIPC
+struct instruction_bit binary_lui(int regd, int imm);
+struct instruction_bit binary_auipc(int regd, int imm);
 
 struct instruction_bit binary_jal(int regd, int imm);
 struct instruction_bit binary_jalr(int regd, int reg1, int imm);
