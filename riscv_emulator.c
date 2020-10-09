@@ -7,12 +7,10 @@ int ram[4096]; //for data_memory
 
 int main(){
   short pc; //program counter
-  int ir, opcode; //instruction register
-  short flag_eq; //flag
+  int ir, opcode; //instruction register, opcode
 
   pc = 0;
   int cnt = 0;
-  flag_eq = 0;
 
 /*
 //calculate sum from 1 to 10
@@ -42,7 +40,6 @@ int main(){
   rom[13] = convert_struct_to_int(binary_jal(3, -6));
   rom[14] = convert_struct_to_int(binary_add(10, 29, 0));
   rom[15] = convert_struct_to_int(binary_jalr(0, 1, 0));
-
 
 
   do{
@@ -115,7 +112,7 @@ int main(){
           pc += offset;
         }
       }else{
-        break; //BLTU,BGEU
+        ; //BLTU,BGEU
       }
     }else if (opcode == I_JAL){
       int i_10_1 = (ir >> 21)&1023;
