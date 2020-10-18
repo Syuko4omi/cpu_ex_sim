@@ -23,7 +23,6 @@ int main(){
   rom[7] = convert_struct_to_int(binary_flts(T0, FT1, FT4));
   rom[8] = convert_struct_to_int(binary_fmvxw(T1, FT4));
 
-
   do{
     reg[0] = 0;
     ir = rom[pc/4]; //fetch instruction
@@ -32,13 +31,14 @@ int main(){
     /*printf("%d %d %d %d %d %d %d %d %d\n", pc/4, reg[0], reg[T0], reg[T1], reg[A0], reg[T3], reg[T4], reg[T5], reg[T6]);
     */
     /*printf("%d %f %f %f %f %f %d %d\n", pc/4, freg[FT0], freg[FT1], freg[FT2], freg[FT3], freg[FT4], reg[T0], reg[T1]);
-*/
+    */
     opcode = extract_opcode(ir);
     int rd = extract_dest_reg(ir);
     int rs1 = extract_source_reg1(ir);
     int rs2 = extract_source_reg2(ir);
     int func3 = extract_func3(ir);
     int func7 = extract_func7(ir);
+
     if (opcode == I_OP){
       if (func3 == 0){
         if (func7 == 0){
@@ -132,6 +132,7 @@ int main(){
           pc += offset;
         }
       }else{
+        printf("unknown command\n");
         break;
       }
     }else if (opcode == I_LUI){
@@ -157,6 +158,7 @@ int main(){
       if (func3 == 2){
         reg[rd] = ram[reg[rs1]+imm];
       }else{
+        printf("unknown command\n");
         break;
       }
     }else if (opcode == I_SW){
@@ -164,6 +166,7 @@ int main(){
       if (func3 == 2){
         ram[reg[rs1]+imm] = reg[rs2];
       }else{
+        printf("unknown command\n");
         break;
       }
     }else if (opcode == I_FLW){
@@ -213,7 +216,7 @@ int main(){
         break;
       }
     }
-  }while(cnt < 10);
+  }while(cnt < 50);
 
   return 0;
 }
