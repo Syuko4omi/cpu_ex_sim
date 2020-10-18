@@ -2,8 +2,9 @@
 #include "riscv_assembler.h"
 
 int reg[32]; //registers for int
+float freg[32]; //registers for float
 int rom[256]; //for instruction(each instruction is 4byte)
-int ram[4096]; //for data_memory
+float ram[4096]; //for data_memory
 
 int main(){
   short pc = 0; //program counter(in units of 4)
@@ -63,8 +64,13 @@ int main(){
       if (func3 == 0){
         if (func7 == 0){
           reg[rd] = (reg[rs1] + reg[rs2]);
-        }else{
+        }else if (func7 == 1){
+          reg[rd] = (reg[rs1] * reg[rs2]);
+        }else if (func7 == 32){
           reg[rd] = (reg[rs1] - reg[rs2]);
+        }else{
+          printf("unknown command\n");
+          break;
         }
       }else if (func3 == 1){
         reg[rd] = (reg[rs1] << reg[rs2]);
@@ -75,7 +81,14 @@ int main(){
           reg[rd] = 0;
         }
       }else if (func3 == 4){
-        reg[rd] = (reg[rs1] ^ reg[rs2]);
+        if (func7 == 0){
+          reg[rd] = (reg[rs1] ^ reg[rs2]);
+        }else if (func7 == 1){
+          reg[rd] = (reg[rs1] / reg[rs2]); //kirisute
+        }else{
+          printf("unknown command\n");
+          break;
+        }
       }else if (func3 == 5){
         if (func7 == 0){
           reg[rd] = (reg[rs1] >> reg[rs2]);
@@ -83,7 +96,14 @@ int main(){
           reg[rd] = ((unsigned)reg[rs1]) >> reg[rs2];
         }
       }else if (func3 == 6){
-        reg[rd] = (reg[rs1] | reg[rs2]);
+        if (func7 == 0){
+          reg[rd] = (reg[rs1] | reg[rs2]);
+        }else if (func7 == 1){
+          reg[rd] = (reg[rs1] % reg[rs2]);
+        }else{
+          printf("unknown command\n");
+          break;
+        }
       }else{
         reg[rd] = (reg[rs1] & reg[rs2]);
       }
@@ -153,19 +173,39 @@ int main(){
       int imm = (func7<<5) + reg[rs2];
       reg[rd] = pc;
       pc = (reg[rs1]+imm);
-    }else if (opcode == I_LOAD){
+    }else if (opcode == I_LW){
       int imm = (func7<<5) + reg[rs2];
       if (func3 == 2){
-        reg[rs1] = ram[imm];
+        reg[rd] = ram[reg[rs1]+imm];
       }else{
         break;
       }
-    }else if (opcode == I_STORE){
-      int imm = func7*32;
+    }else if (opcode == I_SW){
+      int imm = (func7<<5) + reg[rd];
       if (func3 == 2){
         ram[reg[rs1]+imm] = reg[rs2];
       }else{
         break;
+      }
+    }else if (opcode == I_FLW){
+      int imm = (func7<<5) + rs2;
+      if (func3 == 2){
+        freg[rd] = ram[reg[rs1]+imm];
+      }else{
+        printf("unknown command\n");
+        break;
+      }
+    }else if (opcode == I_FSW){
+      int imm = (func7<<5) + rd;
+      if (func3 == 2){
+        ram[reg[rs1]+imm] = freg[rs2];
+      }else{
+        printf("unknown command\n");
+        break;
+      }
+    }else if (opcode == I_FOP){
+      if (func7 == 0){
+
       }
     }
   }while(cnt < 60);

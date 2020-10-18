@@ -7,8 +7,12 @@
 #define I_AUIPC 0b0010111
 #define I_JAL 0b1101111
 #define I_JALR 0b1100111
-#define I_LOAD 0b0000011
-#define I_STORE 0b0100011
+#define I_LW 0b0000011
+#define I_SW 0b0100011
+#define I_FLW 0b0000111
+#define I_FSW 0b0100111
+#define I_FOP 0b1010011
+
 
 struct instruction_bit{
   unsigned int function_7 : 7;
@@ -54,6 +58,7 @@ int extract_func7(int bi){
   return ((bi & 0b11111110000000000000000000000000) >> 25); //[31:25]
 }
 
+//RV32I
 struct instruction_bit binary_add(int regd, int reg1, int reg2){
   struct instruction_bit inst;
   inst.function_7 = 0;
@@ -333,24 +338,193 @@ struct instruction_bit binary_jalr(int regd, int reg1, int imm){
   return inst;
 }
 
-struct instruction_bit binary_load(int regd, int reg1, int imm){
+struct instruction_bit binary_lw(int regd, int reg1, int imm){
   struct instruction_bit inst;
   inst.function_7 = (imm&0b11111100000)>>5;
   inst.source2_reg = imm&0b11111;
   inst.source1_reg = reg1;
   inst.function_3 = 2;
   inst.destination_reg = regd;
-  inst.opcode = I_LOAD;
+  inst.opcode = I_LW;
   return inst;
 }
 
-struct instruction_bit binary_store(int regd, int reg1, int imm){
+struct instruction_bit binary_sw(int reg1, int reg2, int imm){
+  struct instruction_bit inst;
+  inst.function_7 = (imm&0b11111100000)>>5;
+  inst.source2_reg = reg2;
+  inst.source1_reg = reg1;
+  inst.function_3 = 2;
+  inst.destination_reg = imm&0b11111;
+  inst.opcode = I_SW;
+  return inst;
+}
+
+//RV32M
+struct instruction_bit binary_mul(int regd, int reg1, int reg2){
+  struct instruction_bit inst;
+  inst.function_7 = 1;
+  inst.source2_reg = reg2;
+  inst.source1_reg = reg1;
+  inst.function_3 = 0;
+  inst.destination_reg = regd;
+  inst.opcode = I_OP;
+  return inst;
+}
+
+struct instruction_bit binary_div(int regd, int reg1, int reg2){
+  struct instruction_bit inst;
+  inst.function_7 = 1;
+  inst.source2_reg = reg2;
+  inst.source1_reg = reg1;
+  inst.function_3 = 4;
+  inst.destination_reg = regd;
+  inst.opcode = I_OP;
+  return inst;
+}
+
+struct instruction_bit binary_rem(int regd, int reg1, int reg2){
+  struct instruction_bit inst;
+  inst.function_7 = 1;
+  inst.source2_reg = reg2;
+  inst.source1_reg = reg1;
+  inst.function_3 = 6;
+  inst.destination_reg = regd;
+  inst.opcode = I_OP;
+  return inst;
+}
+
+//RV32F
+struct instruction_bit binary_flw(int regd, int reg1, int imm){
   struct instruction_bit inst;
   inst.function_7 = (imm&0b11111100000)>>5;
   inst.source2_reg = imm&0b11111;
   inst.source1_reg = reg1;
   inst.function_3 = 2;
   inst.destination_reg = regd;
-  inst.opcode = I_STORE;
+  inst.opcode = I_FLW;
+  return inst;
+}
+
+struct instruction_bit binary_fsw(int reg1, int reg2, int imm){
+  struct instruction_bit inst;
+  inst.function_7 = (imm&0b11111100000)>>5;
+  inst.source2_reg = reg2;
+  inst.source1_reg = reg1;
+  inst.function_3 = 2;
+  inst.destination_reg = imm&0b11111;
+  inst.opcode = I_FSW;
+  return inst;
+}
+
+
+//rounding mode hasn't been changed(temporary fixed to 0)
+struct instruction_bit binary_fadds(int regd, int reg1, int reg2){
+  struct instruction_bit inst;
+  inst.function_7 = 0;
+  inst.source2_reg = reg2;
+  inst.source1_reg = reg1;
+  inst.function_3 = 0;
+  inst.destination_reg = regd;
+  inst.opcode = I_FOP;
+  return inst;
+}
+
+struct instruction_bit binary_fsubs(int regd, int reg1, int reg2){
+  struct instruction_bit inst;
+  inst.function_7 = 4;
+  inst.source2_reg = reg2;
+  inst.source1_reg = reg1;
+  inst.function_3 = 0;
+  inst.destination_reg = regd;
+  inst.opcode = I_FOP;
+  return inst;
+}
+
+struct instruction_bit binary_fmuls(int regd, int reg1, int reg2){
+  struct instruction_bit inst;
+  inst.function_7 = 8;
+  inst.source2_reg = reg2;
+  inst.source1_reg = reg1;
+  inst.function_3 = 0;
+  inst.destination_reg = regd;
+  inst.opcode = I_FOP;
+  return inst;
+}
+
+struct instruction_bit binary_fdivs(int regd, int reg1, int reg2){
+  struct instruction_bit inst;
+  inst.function_7 = 12;
+  inst.source2_reg = reg2;
+  inst.source1_reg = reg1;
+  inst.function_3 = 0;
+  inst.destination_reg = regd;
+  inst.opcode = I_FOP;
+  return inst;
+}
+
+struct instruction_bit binary_fsqrts(int regd, int reg1){
+  struct instruction_bit inst;
+  inst.function_7 = 44;
+  inst.source2_reg = 0;
+  inst.source1_reg = reg1;
+  inst.function_3 = 0;
+  inst.destination_reg = regd;
+  inst.opcode = I_FOP;
+  return inst;
+}
+
+struct instruction_bit binary_fmvxw(int regd, int reg1){
+  struct instruction_bit inst;
+  inst.function_7 = 112;
+  inst.source2_reg = 0;
+  inst.source1_reg = reg1;
+  inst.function_3 = 0;
+  inst.destination_reg = regd;
+  inst.opcode = I_FOP;
+  return inst;
+}
+
+struct instruction_bit binary_feqs(int regd, int reg1, int reg2){
+  struct instruction_bit inst;
+  inst.function_7 = 80;
+  inst.source2_reg = reg2;
+  inst.source1_reg = reg1;
+  inst.function_3 = 2;
+  inst.destination_reg = regd;
+  inst.opcode = I_FOP;
+  return inst;
+}
+
+struct instruction_bit binary_flts(int regd, int reg1, int reg2){
+  struct instruction_bit inst;
+  inst.function_7 = 80;
+  inst.source2_reg = reg2;
+  inst.source1_reg = reg1;
+  inst.function_3 = 1;
+  inst.destination_reg = regd;
+  inst.opcode = I_FOP;
+  return inst;
+}
+
+struct instruction_bit binary_fles(int regd, int reg1, int reg2){
+  struct instruction_bit inst;
+  inst.function_7 = 80;
+  inst.source2_reg = reg2;
+  inst.source1_reg = reg1;
+  inst.function_3 = 0;
+  inst.destination_reg = regd;
+  inst.opcode = I_FOP;
+  return inst;
+}
+
+struct instruction_bit binary_fmvwx(int regd, int reg1){
+  struct instruction_bit inst;
+  inst.function_7 = 0;
+  inst.source2_reg = 0;
+  inst.source1_reg = reg1;
+  inst.function_3 = 0;
+  inst.destination_reg = regd;
+  inst.opcode = I_FOP;
   return inst;
 }
