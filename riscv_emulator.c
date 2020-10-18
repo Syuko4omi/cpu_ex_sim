@@ -1,59 +1,38 @@
 #include <stdio.h>
+#include <math.h>
 #include "riscv_assembler.h"
 
 int reg[32]; //registers for int
 float freg[32]; //registers for float
 int rom[256]; //for instruction(each instruction is 4byte)
-float ram[4096]; //for data_memory
+int ram[4096]; //for data_memory
 
 int main(){
   short pc = 0; //program counter(in units of 4)
   int ir, opcode; //instruction register, opcode
 
-  int cnt = 0; //tekitouna tokorode tomeyoune!
+  int cnt = 0; //tekitouna tokorode tomeyou!
 
+  rom[0] = convert_struct_to_int(binary_addi(T0, ZERO, 5));
+  rom[1] = convert_struct_to_int(binary_fmvwx(FT0, T0));
+  rom[2] = convert_struct_to_int(binary_fsqrts(FT1, FT0));
+  rom[3] = convert_struct_to_int(binary_addi(T1, ZERO, 4));
+  rom[4] = convert_struct_to_int(binary_fmvwx(FT2, T1));
+  rom[5] = convert_struct_to_int(binary_fmuls(FT3, FT2, FT1));
+  rom[6] = convert_struct_to_int(binary_fadds(FT4, FT1, FT3));
+  rom[7] = convert_struct_to_int(binary_flts(T0, FT1, FT4));
+  rom[8] = convert_struct_to_int(binary_fmvxw(T1, FT4));
 
-//(sample code)calculate sum from 1 to 10
-  rom[0] = convert_struct_to_int(binary_addi(T0, ZERO, 0));
-  rom[1] = convert_struct_to_int(binary_addi(T1, ZERO, 0));
-  rom[2] = convert_struct_to_int(binary_addi(T2, ZERO, 10));
-  rom[3] = convert_struct_to_int(binary_addi(T0, T0, 1));
-  rom[4] = convert_struct_to_int(binary_add(T1, T1, T0));
-  rom[5] = convert_struct_to_int(binary_beq(T0, T2, 8));
-  rom[6] = convert_struct_to_int(binary_jal(RA, -16));
-  rom[7] = convert_struct_to_int(binary_add(A0, T1, ZERO));
-  rom[8] = convert_struct_to_int(binary_jalr(ZERO, RA, 0)); //ret
-
-/*
-//(sample code)calculate fibonacchi
-//main:
-  rom[0] = convert_struct_to_int(binary_addi(T3, ZERO, 10)); //li t3, 10
-  rom[1] = convert_struct_to_int(binary_addi(T4, ZERO, 1));
-  rom[2] = convert_struct_to_int(binary_blt(T4, T3, 8));
-  rom[3] = convert_struct_to_int(binary_add(T4, T3, ZERO)); //mv t4, t3
-  rom[4] = convert_struct_to_int(binary_jal(RA, 36)); //j L3
-//L1:
-  rom[5] = convert_struct_to_int(binary_addi(T4, ZERO, 1));
-  rom[6] = convert_struct_to_int(binary_addi(T5, ZERO, 1));
-  rom[7] = convert_struct_to_int(binary_addi(T0, ZERO, 2));
-//L2:
-  rom[8] = convert_struct_to_int(binary_bge(T0, T3, 20));
-  rom[9] = convert_struct_to_int(binary_add(T6, T4, ZERO));
-  rom[10] = convert_struct_to_int(binary_add(T4, T4, T5));
-  rom[11] = convert_struct_to_int(binary_add(T5, T6, ZERO));
-  rom[12] = convert_struct_to_int(binary_addi(T0, T0, 1));
-  rom[13] = convert_struct_to_int(binary_jal(RA, -24)); //j L2
-//L3:
-  rom[14] = convert_struct_to_int(binary_add(A0, T4, ZERO));
-  rom[15] = convert_struct_to_int(binary_jalr(ZERO, RA, 0));
-*/
 
   do{
     reg[0] = 0;
     ir = rom[pc/4]; //fetch instruction
     pc += 4;
     cnt += 1;
-    printf("%d %d %d %d %d %d %d %d %d\n", pc/4, reg[0], reg[T0], reg[T1], reg[A0], reg[T3], reg[T4], reg[T5], reg[T6]);
+    /*printf("%d %d %d %d %d %d %d %d %d\n", pc/4, reg[0], reg[T0], reg[T1], reg[A0], reg[T3], reg[T4], reg[T5], reg[T6]);
+    */
+    /*printf("%d %f %f %f %f %f %d %d\n", pc/4, freg[FT0], freg[FT1], freg[FT2], freg[FT3], freg[FT4], reg[T0], reg[T1]);
+*/
     opcode = extract_opcode(ir);
     int rd = extract_dest_reg(ir);
     int rs1 = extract_source_reg1(ir);
@@ -170,18 +149,18 @@ int main(){
       reg[rd] = pc;
       pc += offset;
     }else if (opcode == I_JALR){
-      int imm = (func7<<5) + reg[rs2];
+      int imm = (func7<<5) + rs2;
       reg[rd] = pc;
       pc = (reg[rs1]+imm);
     }else if (opcode == I_LW){
-      int imm = (func7<<5) + reg[rs2];
+      int imm = (func7<<5) + rs2;
       if (func3 == 2){
         reg[rd] = ram[reg[rs1]+imm];
       }else{
         break;
       }
     }else if (opcode == I_SW){
-      int imm = (func7<<5) + reg[rd];
+      int imm = (func7<<5) + rd;
       if (func3 == 2){
         ram[reg[rs1]+imm] = reg[rs2];
       }else{
@@ -190,7 +169,7 @@ int main(){
     }else if (opcode == I_FLW){
       int imm = (func7<<5) + rs2;
       if (func3 == 2){
-        freg[rd] = ram[reg[rs1]+imm];
+        freg[rd] = (float)ram[reg[rs1]+imm];
       }else{
         printf("unknown command\n");
         break;
@@ -198,17 +177,43 @@ int main(){
     }else if (opcode == I_FSW){
       int imm = (func7<<5) + rd;
       if (func3 == 2){
-        ram[reg[rs1]+imm] = freg[rs2];
+        ram[reg[rs1]+imm] = (int)freg[rs2];
       }else{
         printf("unknown command\n");
         break;
       }
     }else if (opcode == I_FOP){
       if (func7 == 0){
-
+        freg[rd] = (freg[rs1] + freg[rs2]);
+      }else if (func7 == 4){
+        freg[rd] = (freg[rs1] - freg[rs2]);
+      }else if (func7 == 8){
+        freg[rd] = (freg[rs1] * freg[rs2]);
+      }else if (func7 == 12){
+        freg[rd] = (freg[rs1] / freg[rs2]);
+      }else if (func7 == 44){
+        freg[rd] = sqrt(freg[rs1]);
+      }else if (func7 == 112){
+        reg[rd] = (int)(freg[rs1]); //kirisute
+      }else if (func7 == 80){
+        if (func3 == 2){
+          reg[rd] = (freg[rs1] == freg[rs2]);
+        }else if (func3 == 1){
+          reg[rd] = (freg[rs1] < freg[rs2]);
+        }else if (func3 == 0){
+          reg[rd] = (freg[rs1] <= freg[rs2]);
+        }else{
+          printf("unknown command\n");
+          break;
+        }
+      }else if (func7 == 120){
+        freg[rd] = (float)(reg[rs1]);
+      }else{
+        printf("unknown command\n");
+        break;
       }
     }
-  }while(cnt < 60);
+  }while(cnt < 10);
 
   return 0;
 }

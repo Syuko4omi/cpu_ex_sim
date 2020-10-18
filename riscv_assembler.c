@@ -520,7 +520,7 @@ struct instruction_bit binary_fles(int regd, int reg1, int reg2){
 
 struct instruction_bit binary_fmvwx(int regd, int reg1){
   struct instruction_bit inst;
-  inst.function_7 = 0;
+  inst.function_7 = 120;
   inst.source2_reg = 0;
   inst.source1_reg = reg1;
   inst.function_3 = 0;
