@@ -36,8 +36,8 @@
 
 //(sample code)test of lw, sw (rom[1]:ram[10] <- 5,  rom[2]:reg[T1] <- ram[10])
   rom[0] = convert_struct_to_int(binary_addi(T0, ZERO, 5));
-  rom[1] = convert_struct_to_int(binary_sw(ZERO, T0, 10));
-  rom[2] = convert_struct_to_int(binary_lw(T1, ZERO, 10));
+  rom[1] = convert_struct_to_int(binary_sw(ZERO, T0, 10)); //sw t0, 10(zero)
+  rom[2] = convert_struct_to_int(binary_lw(T1, ZERO, 10)); //lw t1, 10(zero)
 
 //(sample code)test of float
   rom[0] = convert_struct_to_int(binary_addi(T0, ZERO, 5));

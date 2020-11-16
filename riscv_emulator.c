@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <math.h>
+#include <string.h>
 #include "riscv_assembler.h"
 
 int reg[32]; //registers for int
@@ -7,42 +8,88 @@ float freg[32]; //registers for float
 int rom[256]; //for instruction(each instruction is 4byte)
 int ram[4096]; //for data_memory
 
-int main(){
+void disp_func(){
+  int flag = 0;
+  printf("choose command from [reg <num>/freg <num>/mem <num>/e/help]\n");
+  while(flag == 0){
+    char buf[10];
+    unsigned int r_n;
+    if (scanf("%s", buf) == 1){
+      if (strcmp(buf, "reg") == 0){
+        if (scanf("%d", &r_n) == 1 && r_n < 32){
+          printf("reg%d: %d\n", r_n, reg[r_n]);
+        }else if (r_n == 32){
+          for (int i = 0; i < 32; i++){
+            printf("%d ", reg[i]);
+          }
+          printf("\n");
+        }else{
+          printf("number of register must be up to 31. if you want to show all regs, set reg num as 32.\n");
+        }
+      }else if (strcmp(buf, "freg") == 0){
+        if (scanf("%d", &r_n) == 1 && r_n < 32){
+          printf("freg%d: %f\n", r_n, freg[r_n]);
+        }else{
+          printf("number of register must be up to 31.\n");
+        }
+      }else if (strcmp(buf, "mem") == 0){
+        if (scanf("%d", &r_n) == 1){
+          printf("mem%d: %d\n", r_n, ram[r_n]);
+        }
+      }else if (strcmp(buf, "e") == 0){
+        flag = 1;
+      }else if (strcmp(buf, "help") == 0){
+        printf("**********************\n");
+        printf("reg: display property of register (e.g. reg 5 -> show reg[T0])\n");
+        printf("freg: display property of floating-point register (e.g. freg 5 -> show reg[FT5])\n");
+        printf("mem: display property of memory (e.g. mem 1 -> show mem[1])\n");
+        printf("e: execute one step, pc += 4\n");
+        printf("**********************\n");
+      }else{
+        printf("invalid command: choose command from [reg <num>/freg <num>/mem <num>/e/help]\n");
+      }
+    }else{
+      flag = 1;
+    }
+  }
+}
+
+int main(int argc, char *argv[]){
   short pc = 0; //program counter(in units of 4)
   int ir, opcode; //instruction register, opcode
 
   int cnt = 0; //tekitouna tokorode tomeyou!
 
-  //main:
-    rom[0] = convert_struct_to_int(binary_addi(T3, ZERO, 10)); //li t3, 10
-    rom[1] = convert_struct_to_int(binary_addi(T4, ZERO, 1));
-    rom[2] = convert_struct_to_int(binary_blt(T4, T3, 12));
-    rom[3] = convert_struct_to_int(binary_add(T4, T3, ZERO)); //mv t4, t3
-    rom[4] = convert_struct_to_int(binary_jal(RA, 40)); //j L3
-  //L1:
-    rom[5] = convert_struct_to_int(binary_addi(T4, ZERO, 1));
-    rom[6] = convert_struct_to_int(binary_addi(T5, ZERO, 1));
-    rom[7] = convert_struct_to_int(binary_addi(T0, ZERO, 2));
-  //L2:
-    rom[8] = convert_struct_to_int(binary_bge(T0, T3, 24));
-    rom[9] = convert_struct_to_int(binary_add(T6, T4, ZERO));
-    rom[10] = convert_struct_to_int(binary_add(T4, T4, T5));
-    rom[11] = convert_struct_to_int(binary_add(T5, T6, ZERO));
-    rom[12] = convert_struct_to_int(binary_addi(T0, T0, 1));
-    rom[13] = convert_struct_to_int(binary_jal(RA, -20)); //j L2
-  //L3:
-    rom[14] = convert_struct_to_int(binary_add(A0, T4, ZERO));
-    rom[15] = convert_struct_to_int(binary_jalr(ZERO, RA, 0));
+  if (argc != 2){
+    if (argc > 2){
+      fputs("too many source files\n", stderr);
+      return 1;
+    }
+  }else{
+    FILE *fp = fopen(argv[1], "r");
+    if (!fp){
+      fputs("cannot open file\n", stderr);
+      return 1;
+    }
 
-  for (int i = 0; i < 15; i++){
-    printf("%x\n", rom[i]);
+    int num_of_inst = 0;
+    int binary;
+
+    while (fscanf(fp, "%x", &binary) == 1){
+      rom[num_of_inst] = binary;
+      num_of_inst += 1;
+    }
+    fclose(fp);
   }
 
-  while (cnt < 70){
+  while (1){
+    printf("pc:%d\n", pc);
+    disp_func();
+
     reg[0] = 0;
-    printf("%d %d %d %d %d %d %d %d %d %d\n", pc/4, reg[0], reg[T0], reg[T1], reg[T2], reg[A0], reg[T3], reg[T4], reg[T5], reg[T6]);
     ir = rom[pc/4]; //fetch instruction
 
+    /*printf("%d %d %d %d %d %d %d %d %d %d\n", pc/4, reg[0], reg[T0], reg[T1], reg[T2], reg[A0], reg[T3], reg[T4], reg[T5], reg[T6]);*/
     /*printf("%d %f %f %f %f %f %d %d\n", pc/4, freg[FT0], freg[FT1], freg[FT2], freg[FT3], freg[FT4], reg[T0], reg[T1]);
     */
     opcode = extract_opcode(ir);
@@ -248,6 +295,7 @@ int main(){
     }
     cnt += 1;
   }
+
 
   return 0;
 }

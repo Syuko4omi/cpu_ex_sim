@@ -1,5 +1,5 @@
 riscv_emulator: riscv_assembler.o riscv_emulator.o
-	gcc -Wall -o riscv_emulator riscv_assembler.o riscv_emulator.o 
+	gcc -Wall -o emu riscv_assembler.o riscv_emulator.o 
 
 
 riscv_assembler.o: riscv_assembler.c
