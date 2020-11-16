@@ -7,6 +7,7 @@ int reg[32]; //registers for int
 float freg[32]; //registers for float
 int rom[256]; //for instruction(each instruction is 4byte)
 int ram[4096]; //for data_memory
+int ign;
 
 void disp_func(){
   int flag = 0;
@@ -46,13 +47,20 @@ void disp_func(){
           printf("mem%d: %d\n", r_n, ram[r_n]);
         }
       }else if (strcmp(buf, "e") == 0){
-        flag = 1;
-      }else if (strcmp(buf, "help") == 0){
+        if (scanf("%d", &r_n) == 1){
+          if (r_n > 0){
+            ign = r_n;
+            flag = 1;
+          }else{
+          printf("number of step must be at least 1.\n");
+        }
+      }
+    }else if (strcmp(buf, "help") == 0){
         printf("**********************\n");
         printf("reg: display property of register (e.g. reg 5 -> show reg[T0])\n");
         printf("freg: display property of floating-point register (e.g. freg 5 -> show reg[FT5])\n");
         printf("mem: display property of memory (e.g. mem 1 -> show mem[1])\n");
-        printf("e: execute one step, pc += 4\n");
+        printf("e: execute (e.g. e 4 -> execute 4 steps, pc += 16)\n");
         printf("**********************\n");
       }else{
         printf("invalid command: choose command from [reg <num>/freg <num>/mem <num>/e/help]\n");
@@ -64,6 +72,7 @@ void disp_func(){
 }
 
 int main(int argc, char *argv[]){
+  ign = 0;
   short pc = 0; //program counter(in units of 4)
   int ir, opcode; //instruction register, opcode
 
@@ -93,7 +102,10 @@ int main(int argc, char *argv[]){
 
   while (1){
     printf("pc:%d\n", pc);
-    disp_func();
+
+    if (ign == 0){
+      disp_func();
+    }
 
     reg[0] = 0;
     ir = rom[pc/4]; //fetch instruction
@@ -303,6 +315,13 @@ int main(int argc, char *argv[]){
       pc += 4;
     }
     cnt += 1;
+
+    if (ign > 0){
+      ign -= 1;
+    }else if (ign < 0){
+      ign = 0;
+    }
+    
   }
 
 
