@@ -21,16 +21,25 @@ void disp_func(){
         }else if (r_n == 32){
           for (int i = 0; i < 32; i++){
             printf("%d ", reg[i]);
+            if (i%8 == 7){
+              printf("\n");
+            }
           }
-          printf("\n");
         }else{
           printf("number of register must be up to 31. if you want to show all regs, set reg num as 32.\n");
         }
       }else if (strcmp(buf, "freg") == 0){
         if (scanf("%d", &r_n) == 1 && r_n < 32){
           printf("freg%d: %f\n", r_n, freg[r_n]);
+        }else if (r_n == 32){
+          for (int i = 0; i < 32; i++){
+            printf("%f ", freg[i]);
+            if (i%8 == 7){
+              printf("\n");
+            }
+          }
         }else{
-          printf("number of register must be up to 31.\n");
+          printf("number of register must be up to 31. if you want to show all regs, set reg num as 32.\n");
         }
       }else if (strcmp(buf, "mem") == 0){
         if (scanf("%d", &r_n) == 1){
@@ -62,13 +71,13 @@ int main(int argc, char *argv[]){
 
   if (argc != 2){
     if (argc > 2){
-      fputs("too many source files\n", stderr);
+      fputs("too many source files.\n", stderr);
       return 1;
     }
   }else{
     FILE *fp = fopen(argv[1], "r");
     if (!fp){
-      fputs("cannot open file\n", stderr);
+      fputs("failed to open file.\n", stderr);
       return 1;
     }
 
