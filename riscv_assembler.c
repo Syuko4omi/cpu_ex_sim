@@ -292,8 +292,8 @@ struct instruction_bit binary_bge(int reg1, int reg2, int imm){
 
 struct instruction_bit binary_lui(int regd, int imm){
   struct instruction_bit inst;
-  int temp = (imm&(0b11111111111111111111000000000000))>>12;
-  inst.function_7 = (temp&0b11111110000000000000)>>13;
+  int temp = imm;
+  inst.function_7 = (temp&0b111111100000000000000)>>13;
   inst.source2_reg = (temp&0b1111100000000)>>8;
   inst.source1_reg = (temp&0b11111000)>>3;
   inst.function_3 = temp&0b111;
@@ -304,8 +304,8 @@ struct instruction_bit binary_lui(int regd, int imm){
 
 struct instruction_bit binary_auipc(int regd, int imm){
   struct instruction_bit inst;
-  int temp = (imm&(0b11111111111111111111000000000000))>>12;
-  inst.function_7 = (temp&0b11111110000000000000)>>13;
+  int temp = imm;
+  inst.function_7 = (temp&0b111111100000000000000)>>13;
   inst.source2_reg = (temp&0b1111100000000)>>8;
   inst.source1_reg = (temp&0b11111000)>>3;
   inst.function_3 = temp&0b111;

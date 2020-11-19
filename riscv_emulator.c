@@ -63,7 +63,7 @@ void disp_func(){
         printf("e: execute (e.g. e 4 -> execute 4 steps, pc += 16)\n");
         printf("**********************\n");
       }else{
-        printf("invalid command: choose command from [reg <num>/freg <num>/mem <num>/e/help]\n");
+        printf("invalid command: choose command from [reg <num>/freg <num>/mem <num>/e <num>/help]\n");
       }
     }else{
       flag = 1;
@@ -99,6 +99,7 @@ int main(int argc, char *argv[]){
     }
     fclose(fp);
   }
+  rom[0] = convert_struct_to_int(binary_lui(10, 0xdeadb));
 
   while (1){
     printf("pc:%d\n", pc);
@@ -227,11 +228,11 @@ int main(int argc, char *argv[]){
         break;
       }
     }else if (opcode == I_LUI){
-      int imm = (ir & 0b11111111111100000000000000000000) >> 20;
+      int imm = (ir & 0b11111111111111111111000000000000) >> 12;
       reg[rd] = imm<<12;
       pc += 4;
     }else if (opcode == I_AUIPC){
-      int imm = (ir & 0b11111111111100000000000000000000) >> 20;
+      int imm = (ir & 0b11111111111111111111000000000000) >> 12;
       reg[rd] = pc + (imm<<12);
       pc += 4;
     }else if (opcode == I_JAL){
@@ -321,7 +322,7 @@ int main(int argc, char *argv[]){
     }else if (ign < 0){
       ign = 0;
     }
-    
+
   }
 
 
