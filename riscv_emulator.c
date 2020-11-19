@@ -99,7 +99,6 @@ int main(int argc, char *argv[]){
     }
     fclose(fp);
   }
-  rom[0] = convert_struct_to_int(binary_lui(10, 0xdeadb));
 
   while (1){
     printf("pc:%d\n", pc);
