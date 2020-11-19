@@ -11,7 +11,7 @@ int ign;
 
 void disp_func(){
   int flag = 0;
-  printf("choose command from [reg <num>/freg <num>/mem <num>/e/help]\n");
+  printf("choose command from [reg <num>/freg <num>/mem <num>/e <num>/help]\n");
   while(flag == 0){
     char buf[10];
     unsigned int r_n;
@@ -102,6 +102,15 @@ int main(int argc, char *argv[]){
 
   while (1){
     printf("pc:%d\n", pc);
+
+    fprintf(stderr, "************\n");
+    fprintf(stderr, "pc:%d\n", pc);
+    for (int i = 0; i < 32; i++){
+      fprintf(stderr, "[%d: %d] ", i, reg[i]);
+      if (i%8 == 7){
+        fprintf(stderr, "\n");
+      }
+    }fprintf(stderr, "************\n");
 
     if (ign == 0){
       disp_func();

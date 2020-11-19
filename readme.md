@@ -6,7 +6,12 @@ make
 ./emu "filename.txt"
 ```
 
-filename.txtは各行に16進数表示された命令が入っているものとする（sample.txtを参照）。
+filename.txtは各行に16進数表示された命令が入っているものとする（sample.txtを参照）。また、別ターミナルを開いて
+```
+tty
+./emu 2> /dev/ttys002 "filename.txt"
+```
+とすれば、レジスタ0~31の中身が標準エラー出力に常時出力されるようになる。（ステップ実行ごとに中身が更新される。）
 
 ## 使い方
 
