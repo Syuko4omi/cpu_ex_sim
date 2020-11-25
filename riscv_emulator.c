@@ -1,12 +1,13 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
+#include <stdlib.h>
 #include "riscv_assembler.h"
 
 int reg[32]; //registers for int
 float freg[32]; //registers for float
-int rom[256]; //for instruction(each instruction is 4byte)
-int ram[4096]; //for data_memory
+int rom[512]; //for instruction(each instruction is 4byte)
+int *ram; //for data_memory
 int ign;
 
 void disp_func(){
@@ -72,6 +73,7 @@ void disp_func(){
 }
 
 int main(int argc, char *argv[]){
+  ram = (int *)malloc(sizeof(int)*1024*8192);
   ign = 0;
   short pc = 0; //program counter(in units of 4)
   int ir, opcode; //instruction register, opcode
