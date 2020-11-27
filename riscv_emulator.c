@@ -6,9 +6,13 @@
 
 int reg[32]; //registers for int
 float freg[32]; //registers for float
-int rom[512]; //for instruction(each instruction is 4byte)
+int rom[2048]; //for instruction(each instruction is 4byte)
+char rom_string[2048][64];
+char label[512][64];
+int label_pos[512];
 int *ram; //for data_memory
 int ign;
+int src_flag = 0;
 
 void disp_func(){
   int flag = 0;
@@ -78,8 +82,6 @@ int main(int argc, char *argv[]){
   short pc = 0; //program counter(in units of 4)
   int ir, opcode; //instruction register, opcode
 
-  int cnt = 0; //tekitouna tokorode tomeyou!
-
   if (argc != 2){
     if (argc > 2){
       fputs("too many source files.\n", stderr);
@@ -102,6 +104,47 @@ int main(int argc, char *argv[]){
     fclose(fp);
   }
 
+  printf("optional:\nIf there is a machine-code file, enter its name below.\n");
+  printf("You can look step execution from /dev/ttys003. If you don't want to use this option, press the character 'n'.\nFilename:");
+  char srcfile_name[64];
+  int num_of_inst2 = 0;
+  int num_of_label = 0;
+  char raw_inst[64];
+  FILE *inst_output; //instruction
+  scanf("%s", srcfile_name);
+  if (strcmp(srcfile_name, "r") != 0){
+    src_flag = 1;
+    FILE *fq = fopen(srcfile_name, "r");
+    if (!fq){
+      fputs("failed to open file.\n", stderr);
+      return 1;
+    }
+    while (fgets(raw_inst, 64, fq) != NULL){
+      char *pos;
+      if ((pos = strchr(raw_inst, '\n')) != NULL){
+        *pos = '\0';
+      }
+      int temp;
+      for (int i = 0; i < 64; i++){
+        if (raw_inst[i] == '\0'){
+          temp = i;
+          break;
+        }
+      }
+      if (raw_inst[temp-1] != ':'){
+        strcpy(rom_string[num_of_inst2], raw_inst);
+        num_of_inst2 += 1;
+      }else{
+        strcpy(label[num_of_label], raw_inst);
+        label_pos[num_of_label] = num_of_inst2;
+        num_of_label += 1;
+      }
+    }
+    inst_output = fopen("/dev/ttys003", "w");
+    fprintf(stderr, "\n");
+    fprintf(inst_output, "\n");
+  }
+
   while (1){
     printf("pc:%d\n", pc);
 
@@ -113,6 +156,26 @@ int main(int argc, char *argv[]){
         fprintf(stderr, "\n");
       }
     }fprintf(stderr, "************\n");
+
+    if (src_flag == 1){
+      int label_disp = 0;
+      fprintf(inst_output, "************\n");
+      fprintf(inst_output, "pc:%d\n", pc);
+      for (int i = 0; i < num_of_inst2; i++){
+        fprintf(inst_output, "\x1b[0m");
+        if (i == label_pos[label_disp]){
+          fprintf(inst_output, "%s\n", label[label_disp]);
+          label_disp += 1;
+        }
+        if (i == pc/4){
+          fprintf(inst_output, "\x1b[7m");
+          fprintf(inst_output, "%s\n", rom_string[i]);
+        }else{
+          fprintf(inst_output, "%s\n", rom_string[i]);
+        }
+      }fprintf(inst_output, "************\n");
+    }
+
 
     if (ign == 0){
       disp_func();
@@ -325,7 +388,6 @@ int main(int argc, char *argv[]){
       }
       pc += 4;
     }
-    cnt += 1;
 
     if (ign > 0){
       ign -= 1;
@@ -335,6 +397,6 @@ int main(int argc, char *argv[]){
 
   }
 
-
+  fclose(inst_output);
   return 0;
 }

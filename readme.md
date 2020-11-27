@@ -8,10 +8,17 @@ make
 
 filename.txtは各行に16進数表示された命令が入っているものとする（sample.txtを参照）。また、別ターミナルを開いて
 ```
-tty
 ./emu 2> /dev/ttys002 "filename.txt"
 ```
-とすれば、レジスタ0~31の中身が標準エラー出力に常時出力されるようになる。（ステップ実行ごとに中身が更新される。）
+とすれば、レジスタ0~31の中身が標準エラー出力に常時出力されるようになる。（ステップ実行ごとに中身が更新される。）  
+さらに別のターミナル（/dev/ttys003）を開いて、この直後の指示に従って機械語ファイルを
+```
+optional:
+If there is a machine-code file, enter its name below.
+You can look step execution from /dev/ttys003. If you don't want to use this option, press the character 'n'.
+Filename: "filename.s"
+```
+のように指定すれば、ステップ実行においてこれからどの命令を実行しようとしているのかが表示される。
 
 ## 使い方
 
