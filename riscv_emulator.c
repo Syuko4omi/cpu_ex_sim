@@ -11,9 +11,11 @@ int rom[2048]; //for instruction(each instruction is 4byte)
 char rom_string[2048][64];
 char label[512][64];
 int label_pos[512];
+int used_num[512];
 int *ram; //for data_memory
 int ign;
 int src_flag = 0;
+int num_of_label;
 
 int main(int argc, char *argv[]){
   ram = (int *)malloc(sizeof(int)*1024*8192);
@@ -45,9 +47,10 @@ int main(int argc, char *argv[]){
 
   printf("optional:\nIf there is a machine-code file, enter its name below.\n");
   printf("You can look step execution from /dev/ttys003. If you don't want to use this option, press the character 'n'.\nFilename:");
+
+  num_of_label = 0;
   char srcfile_name[64];
   int num_of_inst2 = 0;
-  int num_of_label = 0;
   char raw_inst[64];
   FILE *inst_output; //instruction
   scanf("%s", srcfile_name);
@@ -84,9 +87,18 @@ int main(int argc, char *argv[]){
     fprintf(inst_output, "\n");
   }
 
+  for (int i = 0; i < 512; i++){
+    used_num[i] = 0;
+  }
+
   while (1){
     printf("pc:%d\n", pc);
     regs_dump_to_second_screen(pc);
+    for (int i = 0; i < num_of_label; i++){
+      if (pc/4 == label_pos[i]){
+        used_num[i] += 1;
+      }
+    }
 
     if (src_flag == 1){
       int label_disp = 0;
