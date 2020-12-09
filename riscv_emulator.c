@@ -53,8 +53,8 @@ int main(int argc, char *argv[]){
   int num_of_inst2 = 0;
   char raw_inst[64];
   FILE *inst_output; //instruction
-  scanf("%s", srcfile_name);
-  if (strcmp(srcfile_name, "r") != 0){
+  scanf("%63s", srcfile_name);
+  if (strcmp(srcfile_name, "n") != 0){
     src_flag = 1;
     FILE *fq = fopen(srcfile_name, "r");
     if (!fq){
@@ -82,9 +82,19 @@ int main(int argc, char *argv[]){
         num_of_label += 1;
       }
     }
+
+    /* WSL の Ubuntu でも動くようにエラー処理を追加 */
     inst_output = fopen("/dev/ttys003", "w");
-    fprintf(stderr, "\n");
-    fprintf(inst_output, "\n");
+    if (inst_output != NULL) {
+        fprintf(stderr, "\n");
+        fprintf(inst_output, "\n");
+    } else {
+        fprintf(stderr, "error: fopen(\"/dev/ttys003\")\n");
+        fprintf(stderr, "intead, trying opening \"/dev/tty3\"...\n\n");
+        inst_output = fopen("/dev/tty3", "w");
+        if (inst_output == NULL) exit(1);
+    }
+
   }
 
   for (int i = 0; i < 512; i++){
