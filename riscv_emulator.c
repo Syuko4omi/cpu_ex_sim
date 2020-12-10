@@ -17,6 +17,9 @@ int ign;
 int src_flag = 0;
 int num_of_label;
 
+char* bit_pattern(float x, char buf[32]);
+float bitpattern_to_float(char *s);
+
 int main(int argc, char *argv[]){
   ram = (int *)malloc(sizeof(int)*1024*8192);
   ign = 0;
@@ -274,6 +277,18 @@ int main(int argc, char *argv[]){
         }else{
           pc += 4;
         }
+      }else if (func3 == 6){
+        if (reg[rs1] >= reg[rs2]){
+          pc += offset;
+        }else{
+          pc += 4;
+        }
+      }else if (func3 == 7){
+        if (reg[rs1] >= reg[rs2]){
+          pc += offset;
+        }else{
+          pc += 4;
+        }
       }else{
         printf("unknown command\n");
         break;
@@ -343,6 +358,25 @@ int main(int argc, char *argv[]){
         freg[rd] = (freg[rs1] * freg[rs2]);
       }else if (func7 == 12){
         freg[rd] = (freg[rs1] / freg[rs2]);
+      }else if (func7 == 16){
+        char bit_rs1[32];
+        char bit_rs2[32];
+        bit_pattern(freg[rs1], bit_rs1);
+        bit_pattern(freg[rs2], bit_rs2);
+        if (func3 == 0){
+          bit_rs1[0] = bit_rs2[31];
+          freg[rd] = bitpattern_to_float(bit_rs1);
+        }else if (func3 == 1){
+          if (bit_rs2[31] == '0'){
+            bit_rs1[0] = '1';
+          }else{
+            bit_rs1[0] = '0';
+          }
+          freg[rd] = bitpattern_to_float(bit_rs1);
+        }else{
+          printf("unknown command\n");
+          break;
+        }
       }else if (func7 == 44){
         freg[rd] = sqrt(freg[rs1]);
       }else if (func7 == 112){
@@ -360,6 +394,18 @@ int main(int argc, char *argv[]){
         }
       }else if (func7 == 120){
         freg[rd] = (float)(reg[rs1]);
+      }else if (func7 == 96){
+        if (func3 == 0){
+          reg[rd] = (int)freg[rs1]; //this is not correct.
+        }else if (func3 == 2){
+          reg[rd] = (int)freg[rs1]; //this is ok.
+        }
+      }else if (func7 == 104){
+        if (func3 == 0){
+          freg[rd] = (float)reg[rs1]; //this is not correct.
+        }else if (func3 == 2){
+          freg[rd] = (float)reg[rs1]; //this is not correct.
+        }
       }else{
         printf("unknown command\n");
         break;
@@ -377,7 +423,7 @@ int main(int argc, char *argv[]){
       pc += 4;
     }else if (opcode == I_SEND){
       fprintf(written_file, "%d\n", reg[rs1]);
-      fflush(written_file);
+      fflush(written_file); //immidiately flush buffer
       pc += 4;
     }
 
@@ -395,4 +441,40 @@ int main(int argc, char *argv[]){
 
   free(ram);
   return 0;
+}
+
+
+char* bit_pattern(float x, char buf[32]){
+  union {
+    int n;
+    float f;
+  } input;
+  input.f = x;
+  for (int i = 31; i > 0; i--){
+    buf[31-i] = (char)((((input.n) >> i)&1) + 48);
+  }
+
+  return buf;
+}
+
+float bitpattern_to_float(char *s){
+  float mant = 1.0;
+  float beki = 0.5;
+  int pow = 0;
+  int cur = 1;
+  for (int i = 0; i < 23; i++){
+    if (s[i+9] == '1'){
+      mant += beki;
+    }beki *= 0.5;
+  }
+  for (int i = 0; i < 8; i++){
+    if (s[8-i] == '1'){
+      pow += cur;
+    }cur *= 2;
+  }
+  if (s[0] == '1'){
+    return mant*powf(2.0, pow-127.0)*(-1.0);
+  }else{
+    return mant*powf(2.0, pow-127.0);
+  }
 }
