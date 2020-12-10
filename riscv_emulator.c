@@ -97,6 +97,35 @@ int main(int argc, char *argv[]){
 
   }
 
+  printf("\n");
+  printf("optional:\nIf you want to simulate serial communication(UART), enter the file name which is used for read/written below.\n");
+  printf("If you don't want to use this option, press the character 'n'.\nREAD:");
+  int read_pos = 0;
+  char read_file_name[64];
+  FILE *read_file;
+  scanf("%63s", read_file_name);
+  if (strcmp(read_file_name, "n") != 0){
+    read_file = fopen(read_file_name, "r");
+    if (!read_file){
+      fputs("failed to open file.\n", stderr);
+      return 1;
+    }
+  }
+
+  printf("If you don't want to use this option, press the character 'n'.\nWRITTEN:");
+  int written_pos = 0;
+  char written_file_name[64];
+  FILE *written_file;
+  scanf("%63s", written_file_name);
+  if (strcmp(written_file_name, "n") != 0){
+    written_file = fopen(written_file_name, "w");
+    if (!written_file){
+      fputs("failed to open file.\n", stderr);
+      return 1;
+    }
+  }
+  printf("\n");
+
   for (int i = 0; i < 512; i++){
     used_num[i] = 0;
   }
@@ -336,6 +365,20 @@ int main(int argc, char *argv[]){
         break;
       }
       pc += 4;
+    }else if (opcode == I_RECV){
+      int uart;
+      printf("%d\n", rd);
+      if (fscanf(read_file, "%d", &uart) == 1){
+        reg[rd] = uart;
+      }else{
+        printf("cannot read data\n");
+        break;
+      }
+      pc += 4;
+    }else if (opcode == I_SEND){
+      fprintf(written_file, "%d\n", reg[rs1]);
+      fflush(written_file);
+      pc += 4;
     }
 
     if (ign > 0){
@@ -347,6 +390,9 @@ int main(int argc, char *argv[]){
   }
 
   fclose(inst_output);
+  fclose(read_file);
+  fclose(written_file);
+
   free(ram);
   return 0;
 }
