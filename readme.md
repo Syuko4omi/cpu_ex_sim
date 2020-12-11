@@ -18,7 +18,18 @@ If there is a machine-code file, enter its name below.
 You can look step execution from /dev/ttys003. If you don't want to use this option, press the character 'n'.
 Filename: "filename.s"
 ```
-のように指定すれば、ステップ実行においてこれからどの命令を実行しようとしているのかが表示される。
+のように指定すれば、ステップ実行においてこれからどの命令を実行しようとしているのかが表示される。  
+
+また、
+```
+optional:
+If you want to simulate serial communication(UART), enter the file name which is used for read/written below.
+If you don't want to use this option, press the character 'n'.
+READ: hoge.txt
+If you don't want to use this option, press the character 'n'.
+WRITTEN: fuga.txt
+```
+とすれば、UART通信をシミュレートできる（recv命令では、readに指定したファイルから一行分のデータを読み取り、send命令でwrittenに指定したファイルに一行分のデータを書き込む）。
 
 ## 使い方
 

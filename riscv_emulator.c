@@ -132,8 +132,6 @@ int main(int argc, char *argv[]){
     used_num[i] = 0;
   }
 
-  printf("%d\n", ram[54]);
-
   while (1){
     printf("pc:%d\n", pc);
     regs_dump_to_second_screen(pc);
