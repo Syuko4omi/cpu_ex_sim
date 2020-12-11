@@ -7,12 +7,11 @@
 
 int reg[32]; //registers for int
 float freg[32]; //registers for float
-int rom[2048]; //for instruction(each instruction is 4byte)
 char rom_string[2048][64];
 char label[512][64];
 int label_pos[512];
 int used_num[512];
-int *ram; //for data_memory
+int *ram; //0x00~ : instructions, data follows
 int ign;
 int src_flag = 0;
 int num_of_label;
@@ -42,7 +41,7 @@ int main(int argc, char *argv[]){
     int binary;
 
     while (fscanf(fp, "%x", &binary) == 1){
-      rom[num_of_inst] = binary;
+      ram[num_of_inst] = binary;
       num_of_inst += 1;
     }
     fclose(fp);
@@ -133,6 +132,8 @@ int main(int argc, char *argv[]){
     used_num[i] = 0;
   }
 
+  printf("%d\n", ram[54]);
+
   while (1){
     printf("pc:%d\n", pc);
     regs_dump_to_second_screen(pc);
@@ -167,7 +168,7 @@ int main(int argc, char *argv[]){
     }
 
     reg[0] = 0;
-    ir = rom[pc/4]; //fetch instruction
+    ir = ram[pc/4]; //fetch instruction
     opcode = extract_opcode(ir);
     int rd = extract_dest_reg(ir);
     int rs1 = extract_source_reg1(ir);
