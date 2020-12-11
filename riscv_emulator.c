@@ -18,6 +18,7 @@ int num_of_label;
 
 char* bit_pattern(float x, char buf[32]);
 float bitpattern_to_float(char *s);
+int round_to_nearest_even_f_to_i(float x);
 
 int main(int argc, char *argv[]){
   ram = (int *)malloc(sizeof(int)*1024*8192);
@@ -379,7 +380,7 @@ int main(int argc, char *argv[]){
       }else if (func7 == 44){
         freg[rd] = sqrt(freg[rs1]);
       }else if (func7 == 112){
-        reg[rd] = (int)(freg[rs1]); //kirisute
+        reg[rd] = (int)(freg[rs1]);
       }else if (func7 == 80){
         if (func3 == 2){
           reg[rd] = (freg[rs1] == freg[rs2]);
@@ -395,15 +396,15 @@ int main(int argc, char *argv[]){
         freg[rd] = (float)(reg[rs1]);
       }else if (func7 == 96){
         if (func3 == 0){
-          reg[rd] = (int)freg[rs1]; //this is not correct.
+          reg[rd] = round_to_nearest_even_f_to_i(freg[rs1]);
         }else if (func3 == 2){
-          reg[rd] = (int)freg[rs1]; //this is ok.
+          reg[rd] = (int)freg[rs1];
         }
       }else if (func7 == 104){
         if (func3 == 0){
-          freg[rd] = (float)reg[rs1]; //this is not correct.
+          freg[rd] = (float)reg[rs1];
         }else if (func3 == 2){
-          freg[rd] = (float)reg[rs1]; //this is not correct.
+          freg[rd] = (float)reg[rs1];
         }
       }else{
         printf("unknown command\n");
@@ -475,5 +476,20 @@ float bitpattern_to_float(char *s){
     return mant*powf(2.0, pow-127.0)*(-1.0);
   }else{
     return mant*powf(2.0, pow-127.0);
+  }
+}
+
+int round_to_nearest_even_f_to_i(float x){
+  if (x-0.5 == (int)x){
+    int h = (int)x;
+    if (h%2 == 0){
+      return h;
+    }else{
+      return h+1;
+    }
+  }else if (x-0.5 > (int)x){
+    return ((int)x)+1;
+  }else{
+    return (int)x;
   }
 }

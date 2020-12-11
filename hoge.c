@@ -38,10 +38,31 @@ float bitpattern_to_float(char *s){
   }
 }
 
+int round_to_nearest_even_f_to_i(float x){
+  if (x-0.5 == (int)x){
+    int h = (int)x;
+    if (h%2 == 0){
+      return h;
+    }else{
+      return h+1;
+    }
+  }else if (x-0.5 > (int)x){
+    return ((int)x)+1;
+  }else{
+    return (int)x;
+  }
+}
+
 int main(){
   char ans[32];
   bit_pattern(-2.5, ans);
   printf("%s\n", ans);
   printf("%f\n", bitpattern_to_float(ans));
+  /*printf("%d\n", round_to_nearest_even_f_to_i(1.5));
+  printf("%d\n", round_to_nearest_even_f_to_i(2.5));
+  printf("%d\n", round_to_nearest_even_f_to_i(2.51));
+  printf("%d\n", round_to_nearest_even_f_to_i(2.499999));
+  printf("%d\n", round_to_nearest_even_f_to_i(2.7));
+  printf("%d\n", round_to_nearest_even_f_to_i(3.221));*/
   return 0;
 }
