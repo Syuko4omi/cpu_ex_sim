@@ -4,6 +4,9 @@
 #include <stdlib.h>
 #include "riscv_assembler.h"
 #include "display_function.h"
+#include "fpu.h"
+#include "table.h"
+#include "fclass.h"
 
 typedef union UNION {
     int   i;
@@ -16,6 +19,8 @@ char rom_string[2048][64];
 char label[512][64];
 int label_pos[512];
 int used_num[512];
+char fpu_res[33];
+char fpu_res2[33];
 //int *ram; //0x00~ : instructions, data follows
 b32 *ram;
 int ign;
@@ -25,8 +30,10 @@ int num_of_label;
 char* bit_pattern(float x, char buf[33]); /*attention: buf[32] = '\0'*/
 float bitpattern_to_float(char *s);
 int round_to_nearest_even_f_to_i(float x);
+int convert_str_to_bitwised_int(char *s);
 
 int main(int argc, char *argv[]){
+  init_tables();
   //ram = (int *)malloc(sizeof(int)*1024*8192);
   ram = (b32 *)malloc(sizeof(b32)*1024*8192);
   ign = 0;
@@ -359,19 +366,31 @@ int main(int argc, char *argv[]){
       }
       pc += 4;
     }else if (opcode == I_FOP){
+      char bit_rs1[33];
+      char bit_rs2[33];
+      bit_pattern(freg[rs1], bit_rs1);
+      bit_pattern(freg[rs2], bit_rs2);
+      int a = convert_str_to_bitwised_int(bit_rs1);
+      int b = convert_str_to_bitwised_int(bit_rs2);
       if (func7 == 0){
-        freg[rd] = (freg[rs1] + freg[rs2]);
+        int2bin(fadd(a,b), fpu_res, 32);
+        freg[rd] = bitpattern_to_float(fpu_res);
+        //freg[rd] = (freg[rs1] + freg[rs2]);
       }else if (func7 == 4){
-        freg[rd] = (freg[rs1] - freg[rs2]);
+        int2bin(fadd(a,-b), fpu_res, 32);
+        freg[rd] = bitpattern_to_float(fpu_res);
+        //freg[rd] = (freg[rs1] - freg[rs2]);
       }else if (func7 == 8){
-        freg[rd] = (freg[rs1] * freg[rs2]);
+        int2bin(fmul(a,b), fpu_res, 32);
+        freg[rd] = bitpattern_to_float(fpu_res);
+        //freg[rd] = (freg[rs1] * freg[rs2]);
       }else if (func7 == 12){
-        freg[rd] = (freg[rs1] / freg[rs2]);
+        int2bin(finv(b), fpu_res, 32);
+        int c = convert_str_to_bitwised_int(fpu_res);
+        int2bin(fmul(a,c), fpu_res2, 32);
+        freg[rd] = bitpattern_to_float(fpu_res2);
+        //freg[rd] = (freg[rs1] / freg[rs2]);
       }else if (func7 == 16){
-        char bit_rs1[33];
-        char bit_rs2[33];
-        bit_pattern(freg[rs1], bit_rs1);
-        bit_pattern(freg[rs2], bit_rs2);
         if (func3 == 0){
           bit_rs1[0] = bit_rs2[31];
           freg[rd] = bitpattern_to_float(bit_rs1);
@@ -387,9 +406,11 @@ int main(int argc, char *argv[]){
           break;
         }
       }else if (func7 == 44){
-        freg[rd] = sqrt(freg[rs1]);
+        int2bin(fsqrt(a), fpu_res, 32);
+        freg[rd] = bitpattern_to_float(fpu_res);
+        //freg[rd] = sqrt(freg[rs1]);
       }else if (func7 == 112){
-        reg[rd] = (int)(freg[rs1]);
+        reg[rd] = (int)(freg[rs1]);  //this row must be fixed!!!!!!!!!!!!!!!!!
       }else if (func7 == 80){
         if (func3 == 2){
           reg[rd] = (freg[rs1] == freg[rs2]);
@@ -459,7 +480,7 @@ char* bit_pattern(float x, char buf[33]){
     float f;
   } input;
   input.f = x;
-  for (int i = 31; i > 0; i--){
+  for (int i = 31; i >= 0; i--){
     buf[31-i] = (char)((((input.n) >> i)&1) + 48);
   }
 
@@ -501,4 +522,14 @@ int round_to_nearest_even_f_to_i(float x){
   }else{
     return (int)x;
   }
+}
+
+int convert_str_to_bitwised_int(char *s){
+  int h = 0;
+  for (int i = 0; i < 32; i++){
+    if (s[31-i] == '1'){
+      h += (1 << i);
+    }
+  }
+  return h;
 }

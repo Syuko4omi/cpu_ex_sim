@@ -67,7 +67,7 @@ int main(){
   generate_bit_pattern(0xa00e13, hoge);
   printf("%s\n", hoge);
   printf("%f\n", bitpattern_to_float(hoge));
-  b32 tmp;
+  /*b32 tmp;
   tmp.i = 1;
   ram[0] = tmp;
   freg = ram[0].i;
@@ -76,5 +76,5 @@ int main(){
   reg = ram[1].i;
   printf("%d\n", ram[0].i);
   printf("%f\n", freg);
-  printf("%d\n", freg);
+  printf("%d\n", freg);*/
 }
