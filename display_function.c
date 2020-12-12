@@ -2,9 +2,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+typedef union UNION {
+    int   i;
+    float f;
+} b32;
+
+b32 *ram;
+
 int reg[32]; //registers for int
 float freg[32]; //registers for float
-int *ram;
 int ign;
 int num_of_label;
 char label[512][64];
@@ -46,7 +52,7 @@ void disp_func(){
         }
       }else if (strcmp(buf, "mem") == 0){
         if (scanf("%d", &r_n) == 1){
-          printf("mem%d: %d\n", r_n, ram[r_n]);
+          printf("mem%d: %d\n", r_n, ram[r_n].i);
         }
       }else if (strcmp(buf, "e") == 0){
         if (scanf("%d", &r_n) == 1){
