@@ -3,18 +3,22 @@
 #include <string.h>
 #include <stdlib.h>
 
-char* bit_pattern(float x, char buf[32]){
+void generate_bit_pattern(float x, char buf[32]){
   union {
     int n;
     float f;
   } input;
   input.f = x;
-  for (int i = 31; i > 0; i--){
-    buf[31-i] = (char)((((input.n) >> i)&1) + 48);
+  for (int i = 31; i >= 0; i--){
+    buf[31-i] = ((input.n >> i)&1) + 48;
   }
-
-  return buf;
 }
+
+struct bit_pattern{
+  char pat[32];
+};
+
+struct bit_pattern* foo;
 
 float bitpattern_to_float(char *s){
   float mant = 1.0;
@@ -53,16 +57,37 @@ int round_to_nearest_even_f_to_i(float x){
   }
 }
 
+void my_strcpy(struct bit_pattern* bits, char *s){
+  strcpy(bits->pat, s);
+}
+
+void my_print(struct bit_pattern* bits){
+  printf("%s\n", bits->pat);
+}
+
+struct bit_pattern* ram;
+char ans[32];
+char hoge[32];
+char fuga[32];
+char bar[32];
+
 int main(){
-  char ans[32];
-  bit_pattern(-2.5, ans);
+
+  ram = (struct bit_pattern*)malloc(sizeof(struct bit_pattern)*4);
+
+  foo = (struct bit_pattern*)malloc(sizeof(struct bit_pattern)*32);
+  generate_bit_pattern(-2.5, ans);
   printf("%s\n", ans);
-  printf("%f\n", bitpattern_to_float(ans));
-  /*printf("%d\n", round_to_nearest_even_f_to_i(1.5));
-  printf("%d\n", round_to_nearest_even_f_to_i(2.5));
-  printf("%d\n", round_to_nearest_even_f_to_i(2.51));
-  printf("%d\n", round_to_nearest_even_f_to_i(2.499999));
-  printf("%d\n", round_to_nearest_even_f_to_i(2.7));
-  printf("%d\n", round_to_nearest_even_f_to_i(3.221));*/
+  generate_bit_pattern(4, hoge);
+  generate_bit_pattern((float)((int)0xA00E13), bar);
+  printf("%s\n", bar);
+  printf("%f\n", bitpattern_to_float(bar));
+  strcpy(ram[0].pat, ans);
+  printf("%s\n", ram[0].pat);
+  printf("%s\n", ans);
+  char s[32];
+  printf("ans: %s\n", ans);
+  printf("hoge: %s\n", hoge);
+  printf("%lf\n", bitpattern_to_float(ans));
   return 0;
 }

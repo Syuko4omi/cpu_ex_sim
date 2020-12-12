@@ -5,23 +5,30 @@
 #include "riscv_assembler.h"
 #include "display_function.h"
 
+typedef union UNION {
+    int   i;
+    float f;
+} b32;
+
 int reg[32]; //registers for int
 float freg[32]; //registers for float
 char rom_string[2048][64];
 char label[512][64];
 int label_pos[512];
 int used_num[512];
-int *ram; //0x00~ : instructions, data follows
+//int *ram; //0x00~ : instructions, data follows
+b32 *ram;
 int ign;
 int src_flag = 0;
 int num_of_label;
 
-char* bit_pattern(float x, char buf[32]);
+char* bit_pattern(float x, char buf[33]); /*attention: buf[32] = '\0'*/
 float bitpattern_to_float(char *s);
 int round_to_nearest_even_f_to_i(float x);
 
 int main(int argc, char *argv[]){
-  ram = (int *)malloc(sizeof(int)*1024*8192);
+  //ram = (int *)malloc(sizeof(int)*1024*8192);
+  ram = (b32 *)malloc(sizeof(b32)*1024*8192);
   ign = 0;
   short pc = 0; //program counter(in units of 4)
   int ir, opcode; //instruction register, opcode
@@ -39,10 +46,12 @@ int main(int argc, char *argv[]){
     }
 
     int num_of_inst = 0;
-    int binary;
+    int hexa;
+    b32 hexa_inst;
 
-    while (fscanf(fp, "%x", &binary) == 1){
-      ram[num_of_inst] = binary;
+    while (fscanf(fp, "%x", &hexa) == 1){
+      hexa_inst.i = hexa;
+      ram[num_of_inst] = hexa_inst;
       num_of_inst += 1;
     }
     fclose(fp);
@@ -167,7 +176,7 @@ int main(int argc, char *argv[]){
     }
 
     reg[0] = 0;
-    ir = ram[pc/4]; //fetch instruction
+    ir = ram[pc/4].i; //fetch instruction
     opcode = extract_opcode(ir);
     int rd = extract_dest_reg(ir);
     int rs1 = extract_source_reg1(ir);
@@ -278,7 +287,7 @@ int main(int argc, char *argv[]){
           pc += 4;
         }
       }else if (func3 == 6){
-        if (reg[rs1] >= reg[rs2]){
+        if (reg[rs1] < reg[rs2]){
           pc += offset;
         }else{
           pc += 4;
@@ -316,7 +325,7 @@ int main(int argc, char *argv[]){
     }else if (opcode == I_LW){
       int imm = (func7<<5) + rs2;
       if (func3 == 2){
-        reg[rd] = ram[reg[rs1]+imm];
+        reg[rd] = ram[reg[rs1]+imm].i;
       }else{
         printf("unknown command\n");
         break;
@@ -325,7 +334,7 @@ int main(int argc, char *argv[]){
     }else if (opcode == I_SW){
       int imm = (func7<<5) + rd;
       if (func3 == 2){
-        ram[reg[rs1]+imm] = reg[rs2];
+        ram[reg[rs1]+imm].i = reg[rs2];
       }else{
         printf("unknown command\n");
         break;
@@ -334,7 +343,7 @@ int main(int argc, char *argv[]){
     }else if (opcode == I_FLW){
       int imm = (func7<<5) + rs2;
       if (func3 == 2){
-        freg[rd] = (float)ram[reg[rs1]+imm];
+        freg[rd] = ram[reg[rs1]+imm].f;
       }else{
         printf("unknown command\n");
         break;
@@ -343,7 +352,7 @@ int main(int argc, char *argv[]){
     }else if (opcode == I_FSW){
       int imm = (func7<<5) + rd;
       if (func3 == 2){
-        ram[reg[rs1]+imm] = (int)freg[rs2];
+        ram[reg[rs1]+imm].f = freg[rs2];
       }else{
         printf("unknown command\n");
         break;
@@ -359,8 +368,8 @@ int main(int argc, char *argv[]){
       }else if (func7 == 12){
         freg[rd] = (freg[rs1] / freg[rs2]);
       }else if (func7 == 16){
-        char bit_rs1[32];
-        char bit_rs2[32];
+        char bit_rs1[33];
+        char bit_rs2[33];
         bit_pattern(freg[rs1], bit_rs1);
         bit_pattern(freg[rs2], bit_rs2);
         if (func3 == 0){
@@ -444,7 +453,7 @@ int main(int argc, char *argv[]){
 }
 
 
-char* bit_pattern(float x, char buf[32]){
+char* bit_pattern(float x, char buf[33]){
   union {
     int n;
     float f;
