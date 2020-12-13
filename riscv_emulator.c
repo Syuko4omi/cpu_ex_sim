@@ -242,6 +242,11 @@ int main(int argc, char *argv[]){
       pc += 4;
     }else if (opcode == I_OPIMM){
       int imm = (ir & 0b11111111111100000000000000000000) >> 20; //[31:20]
+      printf("%d\n", imm);
+      if (((imm & 0b100000000000)>>11) == 1){
+        imm = imm-4096; //imm is 12bit signed int
+        printf("%d\n", imm);
+      }
       if (func3 == 0){
         reg[rd] = reg[rs1] + imm;
       }else if (func3 == 1){
