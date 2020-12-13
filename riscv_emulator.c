@@ -32,6 +32,7 @@ char* bit_pattern(float x, char buf[33]); /*attention: buf[32] = '\0'*/
 float bitpattern_to_float(char *s);
 int round_to_nearest_even_f_to_i(float x);
 int convert_str_to_bitwised_int(char *s);
+int minus_of_n(int n);
 
 int main(int argc, char *argv[]){
   init_tables();
@@ -40,7 +41,7 @@ int main(int argc, char *argv[]){
   ign = 0;
   short pc = 0; //program counter(in units of 4)
   int ir, opcode; //instruction register, opcode
-
+  
   if (argc != 2){
     if (argc > 2){
       fputs("too many source files.\n", stderr);
@@ -403,7 +404,8 @@ int main(int argc, char *argv[]){
         freg[rd] = bitpattern_to_float(fpu_res);
         //freg[rd] = (freg[rs1] + freg[rs2]);
       }else if (func7 == 4){
-        int2bin(fadd(a,-b), fpu_res, 32);
+        int c = minus_of_n(b);
+        int2bin(fadd(a,c), fpu_res, 32);
         freg[rd] = bitpattern_to_float(fpu_res);
         //freg[rd] = (freg[rs1] - freg[rs2]);
       }else if (func7 == 8){

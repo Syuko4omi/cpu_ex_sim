@@ -2,6 +2,9 @@
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
+#include "fpu.h"
+#include "table.h"
+#include "fclass.h"
 
 char* bit_pattern(float x, char buf[33]){ //浮動小数の内部表現を取得
   union {
@@ -61,4 +64,15 @@ int convert_str_to_bitwised_int(char *s){ //32bitの'0','1'配列をそのまま
     }
   }
   return h;
+}
+
+int minus_of_n(int n){ //マイナス
+  char foo[33];
+  int2bin(n, foo, 32);
+  if (((n & (1 << 31)) >> 31) == -1){
+    foo[0] = '0';
+  }else{
+    foo[0] = '1';
+  }
+  return convert_str_to_bitwised_int(foo);
 }
