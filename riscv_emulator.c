@@ -242,15 +242,14 @@ int main(int argc, char *argv[]){
       pc += 4;
     }else if (opcode == I_OPIMM){
       int imm = (ir & 0b11111111111100000000000000000000) >> 20; //[31:20]
-      printf("%d\n", imm);
+      int shamt = imm & 0b11111;
       if (((imm & 0b100000000000)>>11) == 1){
         imm = imm-4096; //imm is 12bit signed int
-        printf("%d\n", imm);
       }
       if (func3 == 0){
         reg[rd] = reg[rs1] + imm;
       }else if (func3 == 1){
-        reg[rd] = reg[rs1] << imm;
+        reg[rd] = reg[rs1] << shamt;
       }else if (func3 == 2){
         if (reg[rs1] < imm){
           reg[rd] = 1;
@@ -262,9 +261,9 @@ int main(int argc, char *argv[]){
         reg[rd] = reg[rs1] ^ imm;
       }else if (func3 == 5){
         if (func7 == 0){
-          reg[rd] = reg[rs1] >> imm;
+          reg[rd] = ((unsigned)reg[rs1] >> shamt); //logical
         }else{
-          reg[rd] = ((unsigned)reg[rs1]) >> imm;
+          reg[rd] = (reg[rs1]) >> shamt; //arithmetic
         }
       }
       else if (func3 == 6){
@@ -275,6 +274,9 @@ int main(int argc, char *argv[]){
       pc += 4;
     }else if (opcode == I_BRANCH){
       int offset = (rd&0b11110) + ((func7&63)<<5) + ((rd&1)<<11) + ((func7&64)<<12);
+      if (((offset & 0b1000000000000)>>12) == 1){
+        offset = offset-8192; //imm is 13bit signed int
+      }
       if (func3 == 0){
         if (reg[rs1] == reg[rs2]){
           pc += offset;
@@ -317,11 +319,11 @@ int main(int argc, char *argv[]){
       }
     }else if (opcode == I_LUI){
       int imm = (ir & 0b11111111111111111111000000000000) >> 12;
-      reg[rd] = imm<<12;
+      reg[rd] = imm<<12;  //signed
       pc += 4;
     }else if (opcode == I_AUIPC){
       int imm = (ir & 0b11111111111111111111000000000000) >> 12;
-      reg[rd] = pc + (imm<<12);
+      reg[rd] = pc + (imm<<12);  //imm:signed
       pc += 4;
     }else if (opcode == I_JAL){
       int i_10_1 = (ir >> 21)&1023;
@@ -329,14 +331,23 @@ int main(int argc, char *argv[]){
       int i_19_12 = (ir >> 12)&255;
       int i_20 = (ir >> 31);
       int offset = i_20*(1048576)+i_19_12*(4096)+i_11*(2048)+i_10_1*2;
+      if (((offset & 0b100000000000000000000)>>20) == 1){
+        offset = offset-(1 << 21); //offset is 21bit signed int
+      }
       reg[rd] = pc+4;
       pc += offset;
     }else if (opcode == I_JALR){
-      int imm = (func7<<5) + rs2;
+      int offset = (func7<<5) + rs2;
+      if (((offset & 0b100000000000)>>11) == 1){
+        offset = offset-4096; //offset is 12bit signed int
+      }
       reg[rd] = pc+4;
-      pc = (reg[rs1]+imm);
+      pc = reg[rs1]+offset;
     }else if (opcode == I_LW){
       int imm = (func7<<5) + rs2;
+      if (((imm & 0b100000000000)>>11) == 1){
+        imm = imm-4096; //imm is 12bit signed int
+      }
       if (func3 == 2){
         reg[rd] = ram[(reg[rs1]+imm)/4].i;
       }else{
@@ -346,6 +357,9 @@ int main(int argc, char *argv[]){
       pc += 4;
     }else if (opcode == I_SW){
       int imm = (func7<<5) + rd;
+      if (((imm & 0b100000000000)>>11) == 1){
+        imm = imm-4096; //imm is 12bit signed int
+      }
       if (func3 == 2){
         ram[(reg[rs1]+imm)/4].i = reg[rs2];
       }else{
@@ -355,6 +369,9 @@ int main(int argc, char *argv[]){
       pc += 4;
     }else if (opcode == I_FLW){
       int imm = (func7<<5) + rs2;
+      if (((imm & 0b100000000000)>>11) == 1){
+        imm = imm-4096; //imm is 12bit signed int
+      }
       if (func3 == 2){
         freg[rd] = ram[(reg[rs1]+imm)/4].f;
       }else{
@@ -364,6 +381,9 @@ int main(int argc, char *argv[]){
       pc += 4;
     }else if (opcode == I_FSW){
       int imm = (func7<<5) + rd;
+      if (((imm & 0b100000000000)>>11) == 1){
+        imm = imm-4096; //imm is 12bit signed int
+      }
       if (func3 == 2){
         ram[(reg[rs1]+imm)/4].f = freg[rs2];
       }else{
