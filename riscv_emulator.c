@@ -333,7 +333,7 @@ int main(int argc, char *argv[]){
     }else if (opcode == I_LW){
       int imm = (func7<<5) + rs2;
       if (func3 == 2){
-        reg[rd] = ram[reg[rs1]+imm].i;
+        reg[rd] = ram[(reg[rs1]+imm)/4].i;
       }else{
         printf("unknown command\n");
         break;
@@ -342,7 +342,7 @@ int main(int argc, char *argv[]){
     }else if (opcode == I_SW){
       int imm = (func7<<5) + rd;
       if (func3 == 2){
-        ram[reg[rs1]+imm].i = reg[rs2];
+        ram[(reg[rs1]+imm)/4].i = reg[rs2];
       }else{
         printf("unknown command\n");
         break;
@@ -351,7 +351,7 @@ int main(int argc, char *argv[]){
     }else if (opcode == I_FLW){
       int imm = (func7<<5) + rs2;
       if (func3 == 2){
-        freg[rd] = ram[reg[rs1]+imm].f;
+        freg[rd] = ram[(reg[rs1]+imm)/4].f;
       }else{
         printf("unknown command\n");
         break;
@@ -360,7 +360,7 @@ int main(int argc, char *argv[]){
     }else if (opcode == I_FSW){
       int imm = (func7<<5) + rd;
       if (func3 == 2){
-        ram[reg[rs1]+imm].f = freg[rs2];
+        ram[(reg[rs1]+imm)/4].f = freg[rs2];
       }else{
         printf("unknown command\n");
         break;
