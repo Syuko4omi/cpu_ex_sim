@@ -18,7 +18,7 @@ If there is a machine-code file, enter its name below.
 You can look step execution from /dev/ttys003. If you don't want to use this option, press the character 'n'.
 Filename: "filename.s"
 ```
-のように指定すれば、ステップ実行においてこれからどの命令を実行しようとしているのかが表示される。  
+のように指定すれば、全命令中で「これから実行しようとしている命令」が白背景で表示されるようになる。  
 
 また、
 ```

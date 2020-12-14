@@ -41,7 +41,7 @@ int main(int argc, char *argv[]){
   ign = 0;
   short pc = 0; //program counter(in units of 4)
   int ir, opcode; //instruction register, opcode
-  
+
   if (argc != 2){
     if (argc > 2){
       fputs("too many source files.\n", stderr);
@@ -274,7 +274,7 @@ int main(int argc, char *argv[]){
       }
       pc += 4;
     }else if (opcode == I_BRANCH){
-      int offset = (rd&0b11110) + ((func7&63)<<5) + ((rd&1)<<11) + ((func7&64)<<12);
+      int offset = (rd&0b11110) + ((func7&63)<<5) + ((rd&1)<<11) + ((((unsigned)(func7&64))>>6)<<12);
       if (((offset & 0b1000000000000)>>12) == 1){
         offset = offset-8192; //imm is 13bit signed int
       }
