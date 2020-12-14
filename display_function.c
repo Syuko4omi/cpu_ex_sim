@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "tools.h"
 
 typedef union UNION {
     int   i;
@@ -16,6 +17,7 @@ int num_of_label;
 char label[512][64];
 int label_pos[512];
 int used_num[512];
+char mem_property[33];
 
 void disp_func(){
   int flag = 0;
@@ -52,7 +54,11 @@ void disp_func(){
         }
       }else if (strcmp(buf, "mem") == 0){
         if (scanf("%d", &r_n) == 1){
-          printf("mem%d: %d\n", r_n, ram[r_n].i);
+          bit_pattern(ram[r_n].f, mem_property);
+          printf("mem%d: %s\n", r_n, mem_property);
+          //intが入っていたら2進表現, floatが入っていたら内部表現を表示
+          //4 -> 00000000000000000000000000000100
+          //2.5 -> 01000000001000000000000000000000
         }
       }else if (strcmp(buf, "e") == 0){
         if (scanf("%d", &r_n) == 1){
@@ -71,7 +77,7 @@ void disp_func(){
         printf("**********************\n");
         printf("reg: display property of register (e.g. reg 5 -> show reg[T0])\n");
         printf("freg: display property of floating-point register (e.g. freg 5 -> show reg[FT5])\n");
-        printf("mem: display property of memory (e.g. mem 1 -> show mem[1])\n");
+        printf("mem: display property of memory (e.g. mem 1 -> show mem[1]).\n");
         printf("e: execute (e.g. e 4 -> execute 4 steps, pc += 16)\n");
         printf("func: display how many times each function has been executed\n");
         printf("**********************\n");

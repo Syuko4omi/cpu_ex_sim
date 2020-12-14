@@ -16,23 +16,18 @@ typedef union UNION {
 
 int reg[32]; //registers for int
 float freg[32]; //registers for float
+b32 *ram; //0x00~ : instructions, data follows
+
 char rom_string[2048][64];
 char label[512][64];
 int label_pos[512];
 int used_num[512];
 char fpu_res[33];
-char fpu_res2[33];
-//int *ram; //0x00~ : instructions, data follows
-b32 *ram;
 int ign;
 int src_flag = 0;
-int num_of_label;
+int num_of_label = 0;
 
-char* bit_pattern(float x, char buf[33]); /*attention: buf[32] = '\0'*/
-float bitpattern_to_float(char *s);
-int round_to_nearest_even_f_to_i(float x);
-int convert_str_to_bitwised_int(char *s);
-int minus_of_n(int n);
+char hogehoge[33];
 
 int main(int argc, char *argv[]){
   init_tables();
@@ -58,7 +53,7 @@ int main(int argc, char *argv[]){
     int hexa;
     b32 hexa_inst;
 
-    while (fscanf(fp, "%x", &hexa) == 1){
+    while (fscanf(fp, "%x", &hexa) == 1){ //read assembly file
       hexa_inst.i = hexa;
       ram[num_of_inst] = hexa_inst;
       num_of_inst += 1;
@@ -69,7 +64,6 @@ int main(int argc, char *argv[]){
   printf("optional:\nIf there is a machine-code file, enter its name below.\n");
   printf("You can look step execution from /dev/ttys003. If you don't want to use this option, press the character 'n'.\nFilename:");
 
-  num_of_label = 0;
   char srcfile_name[64];
   int num_of_inst2 = 0;
   char raw_inst[64];
@@ -151,7 +145,7 @@ int main(int argc, char *argv[]){
     used_num[i] = 0;
   }
 
-  while (1){
+  while (1){ //main loop
     printf("pc:%d\n", pc);
     regs_dump_to_second_screen(pc);
     for (int i = 0; i < num_of_label; i++){
@@ -402,22 +396,18 @@ int main(int argc, char *argv[]){
       if (func7 == 0){
         int2bin(fadd(a,b), fpu_res, 32);
         freg[rd] = bitpattern_to_float(fpu_res);
-        //freg[rd] = (freg[rs1] + freg[rs2]);
       }else if (func7 == 4){
         int c = minus_of_n(b);
         int2bin(fadd(a,c), fpu_res, 32);
         freg[rd] = bitpattern_to_float(fpu_res);
-        //freg[rd] = (freg[rs1] - freg[rs2]);
       }else if (func7 == 8){
         int2bin(fmul(a,b), fpu_res, 32);
         freg[rd] = bitpattern_to_float(fpu_res);
-        //freg[rd] = (freg[rs1] * freg[rs2]);
       }else if (func7 == 12){
         int2bin(finv(b), fpu_res, 32);
         int c = convert_str_to_bitwised_int(fpu_res);
-        int2bin(fmul(a,c), fpu_res2, 32);
-        freg[rd] = bitpattern_to_float(fpu_res2);
-        //freg[rd] = (freg[rs1] / freg[rs2]);
+        int2bin(fmul(a,c), fpu_res, 32);
+        freg[rd] = bitpattern_to_float(fpu_res);
       }else if (func7 == 16){
         if (func3 == 0){
           bit_rs1[0] = bit_rs2[31];
@@ -436,7 +426,6 @@ int main(int argc, char *argv[]){
       }else if (func7 == 44){
         int2bin(fsqrt(a), fpu_res, 32);
         freg[rd] = bitpattern_to_float(fpu_res);
-        //freg[rd] = sqrt(freg[rs1]);
       }else if (func7 == 112){
         reg[rd] = (int)(freg[rs1]);  //this row must be fixed!!!!!!!!!!!!!!!!!
       }else if (func7 == 80){

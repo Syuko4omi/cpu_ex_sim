@@ -6,7 +6,7 @@
 #include "table.h"
 #include "fclass.h"
 
-char* bit_pattern(float x, char buf[33]){ //浮動小数の内部表現を取得
+void bit_pattern(float x, char buf[33]){ //浮動小数の内部表現を取得
   union {
     int n;
     float f;
@@ -15,8 +15,6 @@ char* bit_pattern(float x, char buf[33]){ //浮動小数の内部表現を取得
   for (int i = 31; i >= 0; i--){
     buf[31-i] = (char)((((input.n) >> i)&1) + 48);
   }
-
-  return buf;
 }
 
 float bitpattern_to_float(char *s){ //32bitの'0','1'配列を、その内部表現を持つfloatに変換
@@ -66,7 +64,7 @@ int convert_str_to_bitwised_int(char *s){ //32bitの'0','1'配列をそのまま
   return h;
 }
 
-int minus_of_n(int n){ //マイナス
+int minus_of_n(int n){ //FPU用, マイナス表現を取得するために最上位の符号を反転
   char foo[33];
   int2bin(n, foo, 32);
   if (((n & (1 << 31)) >> 31) == -1){
