@@ -107,7 +107,14 @@ int main(int argc, char *argv[]){
         fprintf(stderr, "error: fopen(\"/dev/ttys003\")\n");
         fprintf(stderr, "intead, trying opening \"/dev/tty3\"...\n\n");
         inst_output = fopen("/dev/tty3", "w");
-        if (inst_output == NULL) exit(1);
+        if (inst_output == NULL) {
+            fprintf(stderr, "instead, trying opening \"/dev/pts/2\" ... \n\n");
+            inst_output = fopen("/dev/pts/2", "w");
+            if (inst_output == NULL) {
+                fprintf(stderr, "error: faild to open /dev/pts/2");
+                exit(1);
+            }
+        }
     }
 
   }
@@ -145,7 +152,7 @@ int main(int argc, char *argv[]){
     used_num[i] = 0;
   }
 
-  while (1){ //main loop
+  while (pc >= 0){ //main loop
     printf("pc:%d\n", pc);
     regs_dump_to_second_screen(pc);
     for (int i = 0; i < num_of_label; i++){
