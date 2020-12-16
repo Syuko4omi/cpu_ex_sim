@@ -31,7 +31,6 @@ char hogehoge[33];
 
 int main(int argc, char *argv[]){
   init_tables();
-  //ram = (int *)malloc(sizeof(int)*1024*8192);
   ram = (b32 *)malloc(sizeof(b32)*1024*8192);
   ign = 0;
   short pc = 0; //program counter(in units of 4)
@@ -51,11 +50,9 @@ int main(int argc, char *argv[]){
 
     int num_of_inst = 0;
     int hexa;
-    b32 hexa_inst;
 
     while (fscanf(fp, "%x", &hexa) == 1){ //read assembly file
-      hexa_inst.i = hexa;
-      ram[num_of_inst] = hexa_inst;
+      ram[num_of_inst].i = hexa;
       num_of_inst += 1;
     }
     fclose(fp);
@@ -209,7 +206,13 @@ int main(int argc, char *argv[]){
       }else if (func3 == 1){
         reg[rd] = (reg[rs1] << reg[rs2]);
       }else if (func3 == 2){
-        if (reg[rs1] > reg[rs2]){
+        if (reg[rs1] < reg[rs2]){
+          reg[rd] = 1;
+        }else{
+          reg[rd] = 0;
+        }
+      }else if (func3 == 3){
+        if ((unsigned)reg[rs1] < (unsigned)reg[rs2]){
           reg[rd] = 1;
         }else{
           reg[rd] = 0;
@@ -258,8 +261,13 @@ int main(int argc, char *argv[]){
         }else{
           reg[rd] = 0;
         }
-      }
-      else if (func3 == 4){
+      }else if (func3 == 3){
+        if ((unsigned)reg[rs1] < (unsigned)imm){
+          reg[rd] = 1;
+        }else{
+          reg[rd] = 0;
+        }
+      }else if (func3 == 4){
         reg[rd] = reg[rs1] ^ imm;
       }else if (func3 == 5){
         if (func7 == 0){
@@ -304,13 +312,13 @@ int main(int argc, char *argv[]){
           pc += 4;
         }
       }else if (func3 == 6){
-        if (reg[rs1] < reg[rs2]){
+        if ((unsigned)reg[rs1] < (unsigned)reg[rs2]){
           pc += offset;
         }else{
           pc += 4;
         }
       }else if (func3 == 7){
-        if (reg[rs1] >= reg[rs2]){
+        if ((unsigned)reg[rs1] >= (unsigned)reg[rs2]){
           pc += offset;
         }else{
           pc += 4;
@@ -434,7 +442,8 @@ int main(int argc, char *argv[]){
         int2bin(fsqrt(a), fpu_res, 32);
         freg[rd] = bitpattern_to_float(fpu_res);
       }else if (func7 == 112){
-        reg[rd] = (int)(freg[rs1]);  //this row must be fixed!!!!!!!!!!!!!!!!!
+        int h = convert_str_to_bitwised_int(bit_rs1);
+        reg[rd] = h;
       }else if (func7 == 80){
         if (func3 == 2){
           reg[rd] = (freg[rs1] == freg[rs2]);
@@ -447,7 +456,9 @@ int main(int argc, char *argv[]){
           break;
         }
       }else if (func7 == 120){
-        freg[rd] = (float)(reg[rs1]);
+        int2bin(reg[rs1], hogehoge, 32);
+        float f = bitpattern_to_float(hogehoge);
+        freg[rd] = f;
       }else if (func7 == 96){
         if (func3 == 0){
           reg[rd] = round_to_nearest_even_f_to_i(freg[rs1]);
@@ -468,7 +479,7 @@ int main(int argc, char *argv[]){
     }else if (opcode == I_RECV){
       int uart;
       printf("%d\n", rd);
-      if (fscanf(read_file, "%d", &uart) == 1){
+      if (fscanf(read_file, "%x", &uart) == 1){
         reg[rd] = uart;
       }else{
         printf("cannot read data\n");
@@ -476,7 +487,7 @@ int main(int argc, char *argv[]){
       }
       pc += 4;
     }else if (opcode == I_SEND){
-      fprintf(written_file, "%d\n", reg[rs1]);
+      fprintf(written_file, "%08x\n", reg[rs1]);
       fflush(written_file); //immidiately flush buffer
       pc += 4;
     }
