@@ -168,7 +168,6 @@ int main(int argc, char *argv[]){
       fprintf(inst_output, "************\n");
       fprintf(inst_output, "pc:%d\n", pc);
       for (int i = 0; i < num_of_inst2; i++){
-        fprintf(inst_output, "\x1b[0m");
         if (i == label_pos[label_disp]){
           fprintf(inst_output, "%s\n", label[label_disp]);
           label_disp += 1;
@@ -176,6 +175,7 @@ int main(int argc, char *argv[]){
         if (i == pc/4){
           fprintf(inst_output, "\x1b[7m");
           fprintf(inst_output, "%s\n", rom_string[i]);
+          fprintf(inst_output, "\x1b[0m");
         }else{
           fprintf(inst_output, "%s\n", rom_string[i]);
         }
