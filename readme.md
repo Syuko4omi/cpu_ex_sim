@@ -29,7 +29,8 @@ READ: hoge.txt
 If you don't want to use this option, press the character 'n'.
 WRITTEN: fuga.txt
 ```
-とすれば、UART通信をシミュレートできる（recv命令では、readに指定したファイルから一行分のデータを読み取り、send命令でwrittenに指定したファイルに一行分のデータを書き込む）。
+とすれば、UART通信をシミュレートできる。  
+（recvb命令では、readに指定したファイルから一行分の8bitデータを読み取り、sendb命令でwrittenに指定したファイルに一行分の8bitデータを書き込む。送受信するデータは2桁の16進数とする。）
 
 ## 使い方
 
@@ -46,8 +47,3 @@ reg 5
 e 4
 ```
 とすれば、4ステップ実行する（つまりプログラムカウンタを16進める）。
-
-
-
-## 備考
-引数として.txtファイルを取らない場合、コード中にアセンブリをベタ打ちしてもとりあえずは動く（sample_code.cを参照）。
