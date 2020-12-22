@@ -2,7 +2,6 @@
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
-#include "riscv_assembler.h"
 #include "display_function.h"
 #include "tools.h"
 #include "fpu.h"

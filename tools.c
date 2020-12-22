@@ -6,6 +6,45 @@
 #include "table.h"
 #include "fclass.h"
 
+#define I_OP 0b0110011
+#define I_OPIMM 0b0010011
+#define I_BRANCH 0b1100011
+#define I_LUI 0b0110111
+#define I_AUIPC 0b0010111
+#define I_JAL 0b1101111
+#define I_JALR 0b1100111
+#define I_LW 0b0000011
+#define I_SW 0b0100011
+#define I_FLW 0b0000111
+#define I_FSW 0b0100111
+#define I_FOP 0b1010011
+#define I_RECV_B 0b0000001
+#define I_SEND_B 0b0000010
+
+int extract_opcode(int bi){
+  return (bi & 0b1111111); //[6:0]
+}
+
+int extract_dest_reg(int bi){
+  return ((bi & 0b111110000000) >> 7); //[11:7]
+}
+
+int extract_func3(int bi){
+  return ((bi & 0b111000000000000) >> 12); // [14:12]
+}
+
+int extract_source_reg1(int bi){
+  return ((bi & 0b11111000000000000000) >> 15); //[19:15]
+}
+
+int extract_source_reg2(int bi){
+  return ((bi & 0b1111100000000000000000000) >> 20); //[24:20]
+}
+
+int extract_func7(int bi){
+  return ((bi & 0b11111110000000000000000000000000) >> 25); //[31:25]
+}
+
 void bit_pattern(float x, char buf[33]){ //浮動小数の内部表現を取得
   union {
     int n;
