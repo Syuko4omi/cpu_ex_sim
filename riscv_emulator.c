@@ -31,6 +31,12 @@ char hogehoge[33];
 
 int main(int argc, char *argv[]){
   init_tables();
+
+  for (int i = 0; i < 32; i++){
+    reg[i] = 0;
+    freg[i] = 0.0;
+  }
+
   ram = (b32 *)malloc(sizeof(b32)*1024*8192);
   ign = 0;
   short pc = 0; //program counter(in units of 4)
@@ -476,18 +482,17 @@ int main(int argc, char *argv[]){
         break;
       }
       pc += 4;
-    }else if (opcode == I_RECV){
+    }else if (opcode == I_RECV_B){
       int uart;
-      printf("%d\n", rd);
       if (fscanf(read_file, "%x", &uart) == 1){
-        reg[rd] = uart;
+        reg[rd] += uart;
       }else{
         printf("cannot read data\n");
         break;
       }
       pc += 4;
-    }else if (opcode == I_SEND){
-      fprintf(written_file, "%08x\n", reg[rs1]);
+    }else if (opcode == I_SEND_B){
+      fprintf(written_file, "%02x\n", (reg[rs1] & 0b11111111));
       fflush(written_file); //immidiately flush buffer
       pc += 4;
     }

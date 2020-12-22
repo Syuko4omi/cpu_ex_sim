@@ -10,8 +10,8 @@
 #define I_FLW 0b0000111
 #define I_FSW 0b0100111
 #define I_FOP 0b1010011
-#define I_RECV 0b0000001
-#define I_SEND 0b0000010
+#define I_RECV_B 0b0000001
+#define I_SEND_B 0b0000010
 
 //registers
 #define ZERO 0
