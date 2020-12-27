@@ -17,10 +17,11 @@ int reg[32]; //registers for int
 float freg[32]; //registers for float
 b32 *ram; //0x00~ : instructions, data follows
 
-char rom_string[2048][64];
-char label[512][64];
-int label_pos[512];
-int used_num[512];
+//char rom_string[2048][64];
+char *rom_string[16384];
+char label[1024][64];
+int label_pos[1024];
+int used_num[1024];
 char fpu_res[33];
 int ign;
 int src_flag = 0;
@@ -37,8 +38,11 @@ int main(int argc, char *argv[]){
   }
 
   ram = (b32 *)malloc(sizeof(b32)*1024*8192);
+  for (int i = 0; i < 16384; i++){
+    rom_string[i] = (char *)malloc(sizeof(char)*64);
+  }
   ign = 0;
-  short pc = 0; //program counter(in units of 4)
+  int pc = 0; //program counter(in units of 4)
   int ir, opcode; //instruction register, opcode
 
   if (argc != 2){
@@ -344,11 +348,8 @@ int main(int argc, char *argv[]){
       int i_10_1 = (ir >> 21)&1023;
       int i_11 = (ir >> 20)&1;
       int i_19_12 = (ir >> 12)&255;
-      int i_20 = (ir >> 31);
+      int i_20 = (ir >> 31); //if ir[31] == '1', then i_20 == -1.
       int offset = i_20*(1048576)+i_19_12*(4096)+i_11*(2048)+i_10_1*2;
-      if (((offset & 0b100000000000000000000)>>20) == 1){
-        offset = offset-(1 << 21); //offset is 21bit signed int
-      }
       reg[rd] = pc+4;
       pc += offset;
     }else if (opcode == I_JALR){
@@ -509,5 +510,6 @@ int main(int argc, char *argv[]){
   fclose(written_file);
 
   free(ram);
+  free(rom_string);
   return 0;
 }
