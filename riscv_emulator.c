@@ -2,6 +2,7 @@
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
+#include <fenv.h>
 #include "display_function.h"
 #include "tools.h"
 #include "fpu.h"
@@ -23,13 +24,18 @@ char label[1024][64];
 int label_pos[1024];
 int used_num[1024];
 char fpu_res[33];
-int ign;
+long long ign;
 int src_flag = 0;
 int num_of_label = 0;
-
+int print_flag = 1;
+int bp = 0;
+long long step_counter = 0;
+int dbg_counter = 0;
 char hogehoge[33];
 
 int main(int argc, char *argv[]){
+  float dummy = fabs(0.0);
+  dummy = fmax(dummy, 1.0);
   init_tables();
 
   for (int i = 0; i < 32; i++){
@@ -38,6 +44,7 @@ int main(int argc, char *argv[]){
   }
 
   ram = (b32 *)malloc(sizeof(b32)*1024*8192);
+  memset((void *)ram, -1, sizeof(b32)*1024*8192);
   for (int i = 0; i < 16384; i++){
     rom_string[i] = (char *)malloc(sizeof(char)*64);
   }
@@ -73,7 +80,7 @@ int main(int argc, char *argv[]){
   char srcfile_name[64];
   int num_of_inst2 = 0;
   char raw_inst[64];
-  FILE *inst_output; //instruction
+  FILE *inst_output = NULL; //instruction
   scanf("%63s", srcfile_name);
   if (strcmp(srcfile_name, "n") != 0){
     src_flag = 1;
@@ -130,7 +137,7 @@ int main(int argc, char *argv[]){
   printf("If you don't want to use this option, press the character 'n'.\nREAD:");
   int read_pos = 0;
   char read_file_name[64];
-  FILE *read_file;
+  FILE *read_file = NULL;
   scanf("%63s", read_file_name);
   if (strcmp(read_file_name, "n") != 0){
     read_file = fopen(read_file_name, "r");
@@ -143,7 +150,7 @@ int main(int argc, char *argv[]){
   printf("If you don't want to use this option, press the character 'n'.\nWRITTEN:");
   int written_pos = 0;
   char written_file_name[64];
-  FILE *written_file;
+  FILE *written_file = NULL;
   scanf("%63s", written_file_name);
   if (strcmp(written_file_name, "n") != 0){
     written_file = fopen(written_file_name, "w");
@@ -159,8 +166,21 @@ int main(int argc, char *argv[]){
   }
 
   while (pc >= 0){ //main loop
-    printf("pc:%d\n", pc);
-    regs_dump_to_second_screen(pc);
+    // if (pc == 13764)
+    //   {
+    //     dbg_counter++;
+    //     printf("times pc == 13764: %d\n", dbg_counter);
+    //   }
+    if (pc == bp){
+      ign = 0;
+      if (print_flag == 0){
+        print_flag = 1;
+      }
+    }
+    if (print_flag){
+      printf("pc:%d\n", pc);
+      regs_dump_to_second_screen(pc);
+    }
     for (int i = 0; i < num_of_label; i++){
       if (pc/4 == label_pos[i]){
         used_num[i] += 1;
@@ -190,7 +210,7 @@ int main(int argc, char *argv[]){
     if (ign == 0){
       disp_func();
     }
-
+    step_counter++;
     reg[0] = 0;
     ir = ram[pc/4].i; //fetch instruction
     opcode = extract_opcode(ir);
@@ -378,6 +398,8 @@ int main(int argc, char *argv[]){
       }
       if (func3 == 2){
         ram[(reg[rs1]+imm)/4].i = reg[rs2];
+        // pc = pc + 1;
+        // pc = pc - 1;
       }else{
         printf("unknown command\n");
         break;
@@ -402,6 +424,8 @@ int main(int argc, char *argv[]){
       }
       if (func3 == 2){
         ram[(reg[rs1]+imm)/4].f = freg[rs2];
+        // pc += 1;
+        // pc -= 1;
       }else{
         printf("unknown command\n");
         break;
@@ -415,41 +439,58 @@ int main(int argc, char *argv[]){
       int a = convert_str_to_bitwised_int(bit_rs1);
       int b = convert_str_to_bitwised_int(bit_rs2);
       if (func7 == 0){
-        int2bin(fadd(a,b), fpu_res, 32);
-        freg[rd] = bitpattern_to_float(fpu_res);
+        int2bin(fpu_fadd(a,b), fpu_res, 32);
+        float fadd_fpu = bitpattern_to_float(fpu_res);
+        float fadd_cpu = freg[rs1] + freg[rs2];
+        int err = fabs(fadd_cpu - fadd_fpu) > fmax(freg[rs1] * pow(2, -23), fmax(freg[rs2] * pow(2, -23), fmax(fadd_cpu * pow(2, -23), pow(2, -126))));
+        freg[rd] = fadd_cpu;
       }else if (func7 == 4){
         int c = minus_of_n(b);
-        int2bin(fadd(a,c), fpu_res, 32);
-        freg[rd] = bitpattern_to_float(fpu_res);
+        int2bin(fpu_fadd(a,c), fpu_res, 32);
+        float fsub_fpu = bitpattern_to_float(fpu_res);
+        float fsub_cpu = freg[rs1] - freg[rs2];
+        int err = fabs(fsub_cpu - fsub_fpu) > fmax(freg[rs1] * pow(2, -23), fmax(freg[rs2] * pow(2, -23), fmax(fsub_cpu * pow(2, -23), pow(2, -126))));
+        freg[rd] = fsub_cpu;
       }else if (func7 == 8){
-        int2bin(fmul(a,b), fpu_res, 32);
-        freg[rd] = bitpattern_to_float(fpu_res);
+        int2bin(fpu_fmul(a,b), fpu_res, 32);
+        float fmul_fpu = bitpattern_to_float(fpu_res);
+        float fmul_cpu = freg[rs1] * freg[rs2];
+        int err = fabs(fmul_cpu - fmul_fpu) > fmax(fmul_cpu * pow(2, -22), pow(2, -126));
+        freg[rd] = fmul_cpu;
       }else if (func7 == 12){
-        int2bin(finv(b), fpu_res, 32);
+        int2bin(fpu_finv(b), fpu_res, 32);
         int c = convert_str_to_bitwised_int(fpu_res);
-        int2bin(fmul(a,c), fpu_res, 32);
-        freg[rd] = bitpattern_to_float(fpu_res);
+        b32 cvt;
+        cvt.i = c;
+        float finv_fpu = cvt.f;
+        int2bin(fpu_fmul(a,c), fpu_res, 32);
+        float fdiv_fpu = bitpattern_to_float(fpu_res);
+        float fdiv_cpu = freg[rs1] / freg[rs2];
+        int err = fabs(fdiv_cpu - fdiv_fpu) > fmax(fdiv_cpu * pow(2, -20), pow(2, -126));
+        freg[rd] = fdiv_cpu;
       }else if (func7 == 16){
         if (func3 == 0){
-          bit_rs1[0] = bit_rs2[31];
+          bit_rs1[0] = bit_rs2[0];
           freg[rd] = bitpattern_to_float(bit_rs1);
         }else if (func3 == 1){
-          if (bit_rs2[31] == '0'){
+          if (bit_rs2[0] == '0'){
             bit_rs1[0] = '1';
           }else{
             bit_rs1[0] = '0';
           }
-          freg[rd] = bitpattern_to_float(bit_rs1);
+          float fneg_cpu = -freg[rs1];
+          float fneg_fpu = bitpattern_to_float(bit_rs1);
+          freg[rd] = fneg_cpu;
         }else{
           printf("unknown command\n");
           break;
         }
       }else if (func7 == 44){
-        int2bin(fsqrt(a), fpu_res, 32);
-        freg[rd] = bitpattern_to_float(fpu_res);
-      }else if (func7 == 112){
-        int h = convert_str_to_bitwised_int(bit_rs1);
-        reg[rd] = h;
+        int2bin(fpu_fsqrt(a), fpu_res, 32);
+        float sqrt_fpu = bitpattern_to_float(fpu_res);
+        float sqrt_cpu = sqrt(freg[rs1]);
+        int err = fabs(sqrt_cpu - sqrt_fpu) > fmax(sqrt_cpu * pow(2, -20), pow(2, -126));
+        freg[rd] = sqrt_cpu;
       }else if (func7 == 80){
         if (func3 == 2){
           reg[rd] = (freg[rs1] == freg[rs2]);
@@ -461,15 +502,32 @@ int main(int argc, char *argv[]){
           printf("unknown command\n");
           break;
         }
+      }else if (func7 == 112){
+        int fcpi_fpu = convert_str_to_bitwised_int(bit_rs1);
+        b32 cvt;
+        cvt.f = freg[rs1];
+        int fcpi_cpu = cvt.i;
+        reg[rd] = fcpi_cpu;
       }else if (func7 == 120){
         int2bin(reg[rs1], hogehoge, 32);
-        float f = bitpattern_to_float(hogehoge);
-        freg[rd] = f;
+        float icpf_fpu = bitpattern_to_float(hogehoge);
+        b32 cvt;
+        cvt.i = reg[rs1];
+        float icpf_cpu = cvt.f;
+        freg[rd] = icpf_cpu;
       }else if (func7 == 96){
         if (func3 == 0){
-          reg[rd] = round_to_nearest_even_f_to_i(freg[rs1]);
+          int ftoi_fpu = round_to_nearest_even_f_to_i(freg[rs1]);
+          fesetround(FE_TONEAREST);
+          int ftoi_cpu = rint(freg[rs1]);
+          //int ftoi_cpu = fromfpf(freg[rs1], FP_INT_TONEAREST, 32);
+          reg[rd] = ftoi_cpu;
         }else if (func3 == 2){
-          reg[rd] = (int)freg[rs1];
+          // reg[rd] = (int)freg[rs1];
+          fesetround(FE_DOWNWARD);
+          reg[rd] = rint(freg[rs1]);
+          fesetround(FE_TONEAREST); //reset?
+          //reg[rd] = fromfpf(freg[rs1], FP_INT_DOWNWARD, 32);
         }
       }else if (func7 == 104){
         if (func3 == 0){
@@ -484,7 +542,10 @@ int main(int argc, char *argv[]){
       pc += 4;
     }else if (opcode == I_RECV_B){
       int uart;
+      reg[rd] = reg[rd] >> 8;
+      reg[rd] = reg[rd] << 8;
       if (fscanf(read_file, "%x", &uart) == 1){
+        printf("uart_read: %d\n", uart);
         reg[rd] += uart;
       }else{
         printf("cannot read data\n");
@@ -492,6 +553,7 @@ int main(int argc, char *argv[]){
       }
       pc += 4;
     }else if (opcode == I_SEND_B){
+      printf("uart_write: %02x\n", (reg[rs1] & 0b11111111));
       fprintf(written_file, "%02x\n", (reg[rs1] & 0b11111111));
       fflush(written_file); //immidiately flush buffer
       pc += 4;
@@ -504,12 +566,17 @@ int main(int argc, char *argv[]){
     }
 
   }
-
-  fclose(inst_output);
-  fclose(read_file);
-  fclose(written_file);
+  printf("total steps: %lld", step_counter);
+  printf("last pc: %d", pc);
+  if(inst_output != NULL)
+    fclose(inst_output);
+  if(read_file != NULL)
+    fclose(read_file);
+  if(written_file != NULL)
+    fclose(written_file);
 
   free(ram);
-  free(rom_string);
+  for(int i = 0; i < 16384; i++)
+    free(rom_string[i]);
   return 0;
 }

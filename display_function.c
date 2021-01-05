@@ -12,16 +12,18 @@ b32 *ram;
 
 int reg[32]; //registers for int
 float freg[32]; //registers for float
-int ign;
+long long ign;
 int num_of_label;
 char label[512][64];
 int label_pos[512];
 int used_num[512];
 char mem_property[33];
+int print_flag;
+int bp;
 
 void disp_func(){
   int flag = 0;
-  printf("choose command from [reg <num>/freg <num>/mem <num>/e <num>/func/help]\n");
+  printf("choose command from [reg <num>/freg <num>/mem <num>/e <num>/s <num>/func/help]\n");
   while(flag == 0){
     char buf[10];
     unsigned int r_n;
@@ -69,6 +71,17 @@ void disp_func(){
           printf("number of step must be at least 1.\n");
         }
       }
+    }else if (strcmp(buf, "s") == 0){
+        if (scanf("%d", &r_n) == 1){
+          if (r_n > 0){
+            bp = r_n;
+            ign = __INT64_MAX__;
+            flag = 1;
+            print_flag = 0;
+          }else{
+          printf("number of step must be at least 1.\n");
+        }
+      }
     }else if (strcmp(buf, "func") == 0){
       for (int i = 0; i < num_of_label; i++){
         printf("%s %d\n", label[i], used_num[i]);
@@ -79,10 +92,11 @@ void disp_func(){
         printf("freg: display property of floating-point register (e.g. freg 5 -> show reg[FT5])\n");
         printf("mem: display property of memory (e.g. mem 1 -> show mem[1]).\n");
         printf("e: execute (e.g. e 4 -> execute 4 steps, pc += 16)\n");
+        printf("s: execute all steps and stop when pc < 0\n");
         printf("func: display how many times each function has been executed\n");
         printf("**********************\n");
       }else{
-        printf("invalid command: choose command from [reg <num>/freg <num>/mem <num>/e <num>/func/help]\n");
+        printf("invalid command: choose command from [reg <num>/freg <num>/mem <num>/e <num>/s <num>/func/help]\n");
       }
     }else{
       flag = 1;
