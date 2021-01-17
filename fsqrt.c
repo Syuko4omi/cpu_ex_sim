@@ -13,6 +13,9 @@ fclass* _fsqrt(fclass a, fclass b){
 
   //exp
   int rExp = exp_bias_SQRT + ((aExp + 1) >> 1);
+  if(aExp == 0) {
+    rExp = 0;
+  }
 
   //man
   int exp_even = 1 - (aExp % 2);
@@ -37,7 +40,7 @@ fclass* _fsqrt(fclass a, fclass b){
   else{
     rMan = cnst + (ax >> 15);
   }
-  
+
   fclass* res = newfclass_frombits(rSign, rExp, rMan);
   return res;
 }

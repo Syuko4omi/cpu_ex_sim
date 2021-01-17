@@ -21,6 +21,11 @@
 #define I_RECV_B 0b0000001
 #define I_SEND_B 0b0000010
 
+typedef union UNION {
+    int   i;
+    float f;
+} b32;
+
 int extract_opcode(int bi){
   return (bi & 0b1111111); //[6:0]
 }
@@ -57,25 +62,9 @@ void bit_pattern(float x, char buf[33]){ //浮動小数の内部表現を取得
 }
 
 float bitpattern_to_float(char *s){ //32bitの'0','1'配列を、その内部表現を持つfloatに変換
-  float mant = 1.0;
-  float beki = 0.5;
-  int pow = 0;
-  int cur = 1;
-  for (int i = 0; i < 23; i++){
-    if (s[i+9] == '1'){
-      mant += beki;
-    }beki *= 0.5;
-  }
-  for (int i = 0; i < 8; i++){
-    if (s[8-i] == '1'){
-      pow += cur;
-    }cur *= 2;
-  }
-  if (s[0] == '1'){
-    return mant*powf(2.0, pow-127.0)*(-1.0);
-  }else{
-    return mant*powf(2.0, pow-127.0);
-  }
+  b32 bits;
+  bits.i = (int)strtol(s, NULL, 2);
+  return bits.f;
 }
 
 int round_to_nearest_even_f_to_i(float x){ //偶数丸め

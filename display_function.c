@@ -2,6 +2,25 @@
 #include <stdlib.h>
 #include <string.h>
 #include "tools.h"
+#include "fclass.h"
+
+const char regname[32][8] = {
+  "zero", "ra", "sp", "gp", "tp",
+  "t0", "t1", "t2",
+  "fp(s0)", "s1",
+  "a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7",
+  "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11",
+  "t3", "t4", "t5", "t6"};
+
+const char fregname[32][8] = {
+  "ft0", "ft1", "ft2", "ft3", "ft4", "ft5", "ft6", "ft7",
+  "fs0", "fs1",
+  "fa0", "fa1", "fa2", "fa3", "fa4", "fa5", "fa6", "fa7",
+  "fs2", "fs3", "fs4", "fs5", "fs6", "fs7", "fs8", "fs9", "fs10", "fs11",
+  "ft8", "ft9", "ft10", "ft11"
+};
+
+char bit_buf[33];
 
 typedef union UNION {
     int   i;
@@ -20,6 +39,7 @@ int used_num[512];
 char mem_property[33];
 int print_flag;
 int bp;
+int stop;
 
 void disp_func(){
   int flag = 0;
@@ -42,8 +62,12 @@ void disp_func(){
           printf("number of register must be up to 31. if you want to show all regs, set reg num as 32.\n");
         }
       }else if (strcmp(buf, "freg") == 0){
+
         if (scanf("%d", &r_n) == 1 && r_n < 32){
-          printf("freg%d: %f\n", r_n, freg[r_n]);
+          b32 cvt;
+          cvt.f = freg[r_n];
+          int2bin(cvt.i, bit_buf, 32);
+          printf("freg%d: %32s %f\n", r_n, bit_buf, freg[r_n]);
         }else if (r_n == 32){
           for (int i = 0; i < 32; i++){
             printf("%f ", freg[i]);
@@ -58,13 +82,11 @@ void disp_func(){
         if (scanf("%d", &r_n) == 1){
           bit_pattern(ram[r_n].f, mem_property);
           printf("mem%d: %s\n", r_n, mem_property);
-          //intが入っていたら2進表現, floatが入っていたら内部表現を表示
-          //4 -> 00000000000000000000000000000100
-          //2.5 -> 01000000001000000000000000000000
         }
       }else if (strcmp(buf, "e") == 0){
         if (scanf("%d", &r_n) == 1){
           if (r_n > 0){
+            stop = 0;
             ign = r_n;
             flag = 1;
           }else{
@@ -74,6 +96,7 @@ void disp_func(){
     }else if (strcmp(buf, "s") == 0){
         if (scanf("%d", &r_n) == 1){
           if (r_n > 0){
+            stop = 0;
             bp = r_n;
             ign = __INT64_MAX__;
             flag = 1;
@@ -92,11 +115,10 @@ void disp_func(){
         printf("freg: display property of floating-point register (e.g. freg 5 -> show reg[FT5])\n");
         printf("mem: display property of memory (e.g. mem 1 -> show mem[1]).\n");
         printf("e: execute (e.g. e 4 -> execute 4 steps, pc += 16)\n");
-        printf("s: execute all steps and stop when pc < 0\n");
         printf("func: display how many times each function has been executed\n");
         printf("**********************\n");
       }else{
-        printf("invalid command: choose command from [reg <num>/freg <num>/mem <num>/e <num>/s <num>/func/help]\n");
+        printf("invalid command: choose command from [reg <num>/freg <num>/mem <num>/e <num>/func/help]\n");
       }
     }else{
       flag = 1;
@@ -109,14 +131,14 @@ void regs_dump_to_second_screen(int pc){
   fprintf(stderr, "pc:%d\n", pc);
   fprintf(stderr, "\n");
   for (int i = 0; i < 32; i++){
-    fprintf(stderr, "[reg %d: %d] ", i, reg[i]);
+    fprintf(stderr, "[%s: %d] ", regname[i], reg[i]);
     if (i%8 == 7){
       fprintf(stderr, "\n");
     }
   }
   fprintf(stderr, "\n");
   for (int i = 0; i < 32; i++){
-    fprintf(stderr, "[freg %d: %f] ", i, freg[i]);
+    fprintf(stderr, "[%s: %f] ", fregname[i], freg[i]);
     if (i%4 == 3){
       fprintf(stderr, "\n");
     }

@@ -18,27 +18,29 @@ int reg[32]; //registers for int
 float freg[32]; //registers for float
 b32 *ram; //0x00~ : instructions, data follows
 
-//char rom_string[2048][64];
+int lineIdx[16384];
+
 char *rom_string[16384];
 char label[1024][64];
 int label_pos[1024];
 int used_num[1024];
 char fpu_res[33];
-long long ign;
+long long ign; //if ign != 0, then don't show options until ign == 0(ign -= 1 for each step)
 int src_flag = 0;
 int num_of_label = 0;
 int print_flag = 1;
 int bp = 0;
-long long step_counter = 0;
+long long step_counter = 0; //how many times instructions were executed
 int dbg_counter = 0;
 char hogehoge[33];
+int stop = 0;
 
 int main(int argc, char *argv[]){
   float dummy = fabs(0.0);
   dummy = fmax(dummy, 1.0);
   init_tables();
 
-  for (int i = 0; i < 32; i++){
+  for (int i = 0; i < 32; i++){ //initialize regs
     reg[i] = 0;
     freg[i] = 0.0;
   }
@@ -47,6 +49,7 @@ int main(int argc, char *argv[]){
   memset((void *)ram, -1, sizeof(b32)*1024*8192);
   for (int i = 0; i < 16384; i++){
     rom_string[i] = (char *)malloc(sizeof(char)*64);
+    lineIdx[i] = 0;
   }
   ign = 0;
   int pc = 0; //program counter(in units of 4)
@@ -89,7 +92,9 @@ int main(int argc, char *argv[]){
       fputs("failed to open file.\n", stderr);
       return 1;
     }
+    int lineN = 0;
     while (fgets(raw_inst, 64, fq) != NULL){
+      lineN++;
       char *pos;
       if ((pos = strchr(raw_inst, '\n')) != NULL){
         *pos = '\0';
@@ -103,7 +108,9 @@ int main(int argc, char *argv[]){
       }
       if (raw_inst[temp-1] != ':'){
         strcpy(rom_string[num_of_inst2], raw_inst);
+        lineIdx[num_of_inst2] = lineN;
         num_of_inst2 += 1;
+
       }else{
         strcpy(label[num_of_label], raw_inst);
         label_pos[num_of_label] = num_of_inst2;
@@ -118,7 +125,7 @@ int main(int argc, char *argv[]){
         fprintf(inst_output, "\n");
     } else {
         fprintf(stderr, "error: fopen(\"/dev/ttys003\")\n");
-        fprintf(stderr, "intead, trying opening \"/dev/tty3\"...\n\n");
+        fprintf(stderr, "instead, trying opening \"/dev/tty3\"...\n\n");
         inst_output = fopen("/dev/tty3", "w");
         if (inst_output == NULL) {
             fprintf(stderr, "instead, trying opening \"/dev/pts/2\" ... \n\n");
@@ -166,12 +173,7 @@ int main(int argc, char *argv[]){
   }
 
   while (pc >= 0){ //main loop
-    // if (pc == 13764)
-    //   {
-    //     dbg_counter++;
-    //     printf("times pc == 13764: %d\n", dbg_counter);
-    //   }
-    if (pc == bp){
+    if (pc == bp || stop){
       ign = 0;
       if (print_flag == 0){
         print_flag = 1;
@@ -180,31 +182,33 @@ int main(int argc, char *argv[]){
     if (print_flag){
       printf("pc:%d\n", pc);
       regs_dump_to_second_screen(pc);
-    }
-    for (int i = 0; i < num_of_label; i++){
+
+      for (int i = 0; i < num_of_label; i++){
       if (pc/4 == label_pos[i]){
         used_num[i] += 1;
       }
     }
 
-    if (src_flag == 1){
-      int label_disp = 0;
-      fprintf(inst_output, "************\n");
-      fprintf(inst_output, "pc:%d\n", pc);
-      for (int i = 0; i < num_of_inst2; i++){
-        if (i == label_pos[label_disp]){
-          fprintf(inst_output, "%s\n", label[label_disp]);
-          label_disp += 1;
-        }
-        if (i == pc/4){
-          fprintf(inst_output, "\x1b[7m");
-          fprintf(inst_output, "%s\n", rom_string[i]);
-          fprintf(inst_output, "\x1b[0m");
-        }else{
-          fprintf(inst_output, "%s\n", rom_string[i]);
-        }
-      }fprintf(inst_output, "************\n");
+      if (src_flag == 1){
+        int label_disp = 0;
+        fprintf(inst_output, "************\n");
+        fprintf(inst_output, "pc:%d\n", pc);
+        for (int i = 0; i < num_of_inst2; i++){
+          if (i == label_pos[label_disp]){ //ラベルは無条件に表示
+            fprintf(inst_output, "%s\n", label[label_disp]);
+            label_disp += 1;
+          }
+          if (i == pc/4){
+            fprintf(inst_output, "\x1b[7m");
+            fprintf(inst_output, "%5d%s\n", lineIdx[i], rom_string[i]);
+            fprintf(inst_output, "\x1b[0m");
+          }else if(pc/4-4 < i && i < pc/4+4){// これから実行する命令の前後3つずつを表示
+            fprintf(inst_output, "%5d%s\n", lineIdx[i], rom_string[i]);
+          }
+        }fprintf(inst_output, "************\n");
+      }
     }
+
 
 
     if (ign == 0){
@@ -398,8 +402,6 @@ int main(int argc, char *argv[]){
       }
       if (func3 == 2){
         ram[(reg[rs1]+imm)/4].i = reg[rs2];
-        // pc = pc + 1;
-        // pc = pc - 1;
       }else{
         printf("unknown command\n");
         break;
@@ -424,8 +426,6 @@ int main(int argc, char *argv[]){
       }
       if (func3 == 2){
         ram[(reg[rs1]+imm)/4].f = freg[rs2];
-        // pc += 1;
-        // pc -= 1;
       }else{
         printf("unknown command\n");
         break;
@@ -442,32 +442,58 @@ int main(int argc, char *argv[]){
         int2bin(fpu_fadd(a,b), fpu_res, 32);
         float fadd_fpu = bitpattern_to_float(fpu_res);
         float fadd_cpu = freg[rs1] + freg[rs2];
-        int err = fabs(fadd_cpu - fadd_fpu) > fmax(freg[rs1] * pow(2, -23), fmax(freg[rs2] * pow(2, -23), fmax(fadd_cpu * pow(2, -23), pow(2, -126))));
-        freg[rd] = fadd_cpu;
+        int err = fabs(fadd_cpu - fadd_fpu) > fmax(fabs(freg[rs1]) * pow(2, -23), fmax(fabs(freg[rs2]) * pow(2, -23), fmax(fabs(fadd_cpu) * pow(2, -23), pow(2, -126))));
+        // if(err) {
+        //   stop = 1;
+        //   printf("fadd error: %32s + %32s\n",bit_rs1, bit_rs2);
+        //   printf("fpu : %32s\n", fpu_res);
+        // }
+        freg[rd] = fadd_fpu;
       }else if (func7 == 4){
         int c = minus_of_n(b);
         int2bin(fpu_fadd(a,c), fpu_res, 32);
         float fsub_fpu = bitpattern_to_float(fpu_res);
         float fsub_cpu = freg[rs1] - freg[rs2];
-        int err = fabs(fsub_cpu - fsub_fpu) > fmax(freg[rs1] * pow(2, -23), fmax(freg[rs2] * pow(2, -23), fmax(fsub_cpu * pow(2, -23), pow(2, -126))));
-        freg[rd] = fsub_cpu;
+        int err = fabs(fsub_cpu - fsub_fpu) > fmax(fabs(freg[rs1]) * pow(2, -23), fmax(fabs(freg[rs2]) * pow(2, -23), fmax(fabs(fsub_cpu) * pow(2, -23), pow(2, -126))));
+        // if(err) {
+        //   stop = 1;
+        //   printf("fsub error: %32s - %32s\n",bit_rs1, bit_rs2);
+        //   printf("fpu : %32s\n", fpu_res);
+        // }
+        freg[rd] = fsub_fpu;
       }else if (func7 == 8){
         int2bin(fpu_fmul(a,b), fpu_res, 32);
         float fmul_fpu = bitpattern_to_float(fpu_res);
         float fmul_cpu = freg[rs1] * freg[rs2];
-        int err = fabs(fmul_cpu - fmul_fpu) > fmax(fmul_cpu * pow(2, -22), pow(2, -126));
-        freg[rd] = fmul_cpu;
+        int err = fabs(fmul_cpu - fmul_fpu) > fmax(fabs(fmul_cpu) * pow(2, -22), pow(2, -126));
+        // if(err) {
+        //   stop = 1;
+        //   printf("fmul error: %32s * %32s\n",bit_rs1, bit_rs2);
+        //   printf("fpu : %32s\n", fpu_res);
+        // }
+        freg[rd] = fmul_fpu;
       }else if (func7 == 12){
-        int2bin(fpu_finv(b), fpu_res, 32);
-        int c = convert_str_to_bitwised_int(fpu_res);
-        b32 cvt;
-        cvt.i = c;
-        float finv_fpu = cvt.f;
-        int2bin(fpu_fmul(a,c), fpu_res, 32);
+        // int2bin(fpu_finv(b), fpu_res, 32);
+        // int c = convert_str_to_bitwised_int(fpu_res);
+        // b32 cvt;
+        // cvt.i = c;
+        // float finv_fpu = cvt.f;
+        // int2bin(fpu_fmul(a,c), fpu_res, 32);
+        int2bin(fpu_fdiv(a,b), fpu_res, 32);
         float fdiv_fpu = bitpattern_to_float(fpu_res);
         float fdiv_cpu = freg[rs1] / freg[rs2];
-        int err = fabs(fdiv_cpu - fdiv_fpu) > fmax(fdiv_cpu * pow(2, -20), pow(2, -126));
-        freg[rd] = fdiv_cpu;
+
+        int err = fabs(fdiv_cpu - fdiv_fpu) > fmax(fabs(fdiv_cpu) * pow(2, -20), pow(2, -126));
+        // if(err) {
+        //   stop = 1;
+        //   printf("fdiv error: %32s / %32s\n",bit_rs1, bit_rs2);
+        //   printf("fpu : %32s,  %f\n", fpu_res, fdiv_fpu);
+        //   b32 cvt;
+        //   cvt.f = fdiv_cpu;
+        //   int2bin(cvt.i, fpu_res, 32);
+        //   printf("cpu : %32s,  %f\n", fpu_res, fdiv_cpu);
+        // }
+        freg[rd] = fdiv_fpu;
       }else if (func7 == 16){
         if (func3 == 0){
           bit_rs1[0] = bit_rs2[0];
@@ -489,8 +515,13 @@ int main(int argc, char *argv[]){
         int2bin(fpu_fsqrt(a), fpu_res, 32);
         float sqrt_fpu = bitpattern_to_float(fpu_res);
         float sqrt_cpu = sqrt(freg[rs1]);
-        int err = fabs(sqrt_cpu - sqrt_fpu) > fmax(sqrt_cpu * pow(2, -20), pow(2, -126));
-        freg[rd] = sqrt_cpu;
+        int err = fabs(sqrt_cpu - sqrt_fpu) > fmax(fabs(sqrt_cpu) * pow(2, -20), pow(2, -126));
+        // if(err) {
+        //   stop = 1;
+        //   printf("fsqrt error: %32s\n",bit_rs1);
+        //   printf("fpu : %32s\n", fpu_res);
+        // }
+        freg[rd] = sqrt_fpu;
       }else if (func7 == 80){
         if (func3 == 2){
           reg[rd] = (freg[rs1] == freg[rs2]);
@@ -566,8 +597,8 @@ int main(int argc, char *argv[]){
     }
 
   }
-  printf("total steps: %lld", step_counter);
-  printf("last pc: %d", pc);
+  printf("total steps: %lld\n", step_counter);
+  printf("last pc: %d\n", pc);
   if(inst_output != NULL)
     fclose(inst_output);
   if(read_file != NULL)
