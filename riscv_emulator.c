@@ -524,11 +524,11 @@ int main(int argc, char *argv[]){
         freg[rd] = sqrt_fpu;
       }else if (func7 == 80){
         if (func3 == 2){
-          reg[rd] = (freg[rs1] == freg[rs2]);
+          reg[rd] = fpu_feq(a, b);
         }else if (func3 == 1){
-          reg[rd] = (freg[rs1] < freg[rs2]);
+          reg[rd] = fpu_flt(a, b);
         }else if (func3 == 0){
-          reg[rd] = (freg[rs1] <= freg[rs2]);
+          reg[rd] = fpu_fle(a, b);
         }else{
           printf("unknown command\n");
           break;

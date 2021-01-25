@@ -16,19 +16,21 @@ fclass* _fmul(fclass a, fclass b){
   int LL = slice(aManL, 10, 9) * slice(bManL, 10, 9);
 
   int man = (HH << 2) + slice(HL, 23, 9) + slice(LH, 23, 9) + slice(LL, 3, 2);
+  int roundup1 = slice(man, 26, 4) == (1 << 23) - 1;
+  int roundup2 = slice(man, 25, 3) == (1 << 23) - 1;
 
   fclass* res;
   if(a.exp * b.exp == 0 || slice(exp, 9, 8) == 0) {
     // zero or underflow
     res = newfclass_frombits(sign, 0, 0);
-  } 
+  }
   else if(exp & (1 << 9)){
     // overflow
     res = newfclass_frombits(sign, (1 << 8) - 1, 0);
   }
   else if((man & (1 << 27)) && slice(exp, 7, 0) != 255){
     if(slice(man, 3, 0) >= (1 << 3)){
-      res = newfclass_frombits(sign, slice(exp, 7, 0) + 1, slice(man, 26, 4) + 1);
+      res = newfclass_frombits(sign, slice(exp, 7, 0) + 1 + roundup1, slice(man, 26, 4) + 1);
     }
     else{
       res = newfclass_frombits(sign, slice(exp, 7, 0) + 1, slice(man, 26, 4));
@@ -36,7 +38,7 @@ fclass* _fmul(fclass a, fclass b){
   }
   else{
     if(slice(man, 2, 0) > (1 << 2)){
-      res = newfclass_frombits(sign, slice(exp, 7, 0), slice(man, 25, 3) + 1);
+      res = newfclass_frombits(sign, slice(exp, 7, 0) + roundup2, slice(man, 25, 3) + 1);
     }
     else{
       res = newfclass_frombits(sign, slice(exp, 7, 0), slice(man, 25, 3));

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "fcmp.h"
 #include "fclass.h"
 
 fclass* _fadd(fclass, fclass);
@@ -40,4 +41,31 @@ int fpu_finv(int a_bits){
 
 int fpu_fsqrt(int a_bits){
   return exec_fcalc(_fsqrt, a_bits, 0);
+}
+
+int fpu_fle(int a_bits, int b_bits){
+  fclass* a = int2fclass(a_bits);
+  fclass* b = int2fclass(b_bits);
+  int res = _fle(*a, *b);
+  free(a);
+  free(b);
+  return res;
+}
+
+int fpu_flt(int a_bits, int b_bits){
+  fclass* a = int2fclass(a_bits);
+  fclass* b = int2fclass(b_bits);
+  int res = _flt(*a, *b);
+  free(a);
+  free(b);
+  return res;
+}
+
+int fpu_feq(int a_bits, int b_bits){
+  fclass* a = int2fclass(a_bits);
+  fclass* b = int2fclass(b_bits);
+  int res = _feq(*a, *b);
+  free(a);
+  free(b);
+  return res;
 }
