@@ -8,3 +8,5 @@ int fpu_fsqrt(int);
 int fpu_fle(int, int);
 int fpu_flt(int, int);
 int fpu_feq(int, int);
+int fpu_ftoi(float, int);
+float fpu_itof(int);

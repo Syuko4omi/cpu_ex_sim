@@ -46,7 +46,7 @@ int main(int argc, char *argv[]){
   }
 
   ram = (b32 *)malloc(sizeof(b32)*1024*8192);
-  memset((void *)ram, -1, sizeof(b32)*1024*8192);
+  memset((void *)ram, -1, sizeof(b32)*1024*8192); //initialize all mems
   for (int i = 0; i < 16384; i++){
     rom_string[i] = (char *)malloc(sizeof(char)*64);
     lineIdx[i] = 0;
@@ -548,23 +548,32 @@ int main(int argc, char *argv[]){
         freg[rd] = icpf_cpu;
       }else if (func7 == 96){
         if (func3 == 0){
-          int ftoi_fpu = round_to_nearest_even_f_to_i(freg[rs1]);
+          /*int ftoi_fpu = round_to_nearest_even_f_to_i(freg[rs1]);
           fesetround(FE_TONEAREST);
-          int ftoi_cpu = rint(freg[rs1]);
+          int ftoi_cpu = rint(freg[rs1]);*/
+
+          reg[rd] = fpu_ftoi(freg[rs1], 0);
+
           //int ftoi_cpu = fromfpf(freg[rs1], FP_INT_TONEAREST, 32);
-          reg[rd] = ftoi_cpu;
+
+          /*reg[rd] = ftoi_cpu;*/
         }else if (func3 == 2){
           // reg[rd] = (int)freg[rs1];
-          fesetround(FE_DOWNWARD);
+
+          /*fesetround(FE_DOWNWARD);
           reg[rd] = rint(freg[rs1]);
-          fesetround(FE_TONEAREST); //reset?
+          fesetround(FE_TONEAREST);*/
+
+          reg[rd] = fpu_ftoi(freg[rs1], 1);
           //reg[rd] = fromfpf(freg[rs1], FP_INT_DOWNWARD, 32);
         }
       }else if (func7 == 104){
         if (func3 == 0){
-          freg[rd] = (float)reg[rs1];
+          //freg[rd] = (float)reg[rs1];
+          freg[rd] = fpu_itof(reg[rs1]);
         }else if (func3 == 2){
-          freg[rd] = (float)reg[rs1];
+          //freg[rd] = (float)reg[rs1];
+          freg[rd] = fpu_itof(reg[rs1]);
         }
       }else{
         printf("unknown command\n");

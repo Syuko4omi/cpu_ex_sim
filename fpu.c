@@ -11,6 +11,9 @@ fclass* _fdiv(fclass, fclass);
 fclass* _finv(fclass, fclass);
 fclass* _fsqrt(fclass, fclass);
 
+int ftoi(fclass, int);
+fclass* itof(int);
+
 
 int exec_fcalc(fclass* (*fun)(fclass, fclass), int a_bits, int b_bits){
   fclass* a = int2fclass(a_bits);
@@ -68,4 +71,18 @@ int fpu_feq(int a_bits, int b_bits){
   free(a);
   free(b);
   return res;
+}
+
+int fpu_ftoi(float a_float, int mode){
+  fclass* a = newfclass(a_float);
+  int res = ftoi(*a, mode);
+  free(a);
+  return res;
+}
+
+float fpu_itof(int a_bits){
+  fclass* res = itof(a_bits);
+  float res_value = res->body.value;
+  free(res);
+  return res_value;
 }
