@@ -34,6 +34,7 @@ long long step_counter = 0; //how many times instructions were executed
 int dbg_counter = 0;
 char hogehoge[33];
 int stop = 0;
+int zero_add_counter = 0;
 
 int main(int argc, char *argv[]){
   float dummy = fabs(0.0);
@@ -286,6 +287,9 @@ int main(int argc, char *argv[]){
       }
       if (func3 == 0){
         reg[rd] = reg[rs1] + imm;
+        if (imm == 0 && rd == rs1){
+          zero_add_counter += 1;
+        }
       }else if (func3 == 1){
         reg[rd] = reg[rs1] << shamt;
       }else if (func3 == 2){
@@ -608,6 +612,7 @@ int main(int argc, char *argv[]){
   }
   printf("total steps: %lld\n", step_counter);
   printf("last pc: %d\n", pc);
+  printf("zero_add: %d", zero_add_counter);
   if(inst_output != NULL)
     fclose(inst_output);
   if(read_file != NULL)
