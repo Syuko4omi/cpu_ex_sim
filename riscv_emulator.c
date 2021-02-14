@@ -18,9 +18,9 @@ int reg[32]; //registers for int
 float freg[32]; //registers for float
 b32 *ram; //0x00~ : instructions, data follows
 
-int lineIdx[16384];
+int lineIdx[32768];
 
-char *rom_string[16384];
+char *rom_string[32768];
 char label[1024][64];
 int label_pos[1024];
 int used_num[1024];
@@ -48,7 +48,7 @@ int main(int argc, char *argv[]){
 
   ram = (b32 *)malloc(sizeof(b32)*1024*8192);
   memset((void *)ram, -1, sizeof(b32)*1024*8192); //initialize all mems
-  for (int i = 0; i < 16384; i++){
+  for (int i = 0; i < 32768; i++){
     rom_string[i] = (char *)malloc(sizeof(char)*64);
     lineIdx[i] = 0;
   }
@@ -624,7 +624,7 @@ int main(int argc, char *argv[]){
     fclose(written_file);
 
   free(ram);
-  for(int i = 0; i < 16384; i++)
+  for(int i = 0; i < 32768; i++)
     free(rom_string[i]);
   return 0;
 }
