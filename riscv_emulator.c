@@ -591,7 +591,9 @@ int main(int argc, char *argv[]){
       reg[rd] = reg[rd] >> 8;
       reg[rd] = reg[rd] << 8;
       if (fscanf(read_file, "%x", &uart) == 1){
+        printf("!!!receive!!!    pc: %d, steps: %lld\n", pc, step_counter);
         printf("uart_read: %d\n", uart);
+        printf("\n");
         reg[rd] += uart;
       }else{
         printf("cannot read data\n");
@@ -599,7 +601,9 @@ int main(int argc, char *argv[]){
       }
       pc += 4;
     }else if (opcode == I_SEND_B){
+      printf("!!!send!!!    pc: %d, steps: %lld\n", pc, step_counter);
       printf("uart_write: %02x\n", (reg[rs1] & 0b11111111));
+      printf("\n");
       fprintf(written_file, "%02x\n", (reg[rs1] & 0b11111111));
       fflush(written_file); //immidiately flush buffer
       pc += 4;
