@@ -43,7 +43,7 @@ int main(int argc, char *argv[]){
 
   for (int i = 0; i < 32; i++){ //initialize regs
     reg[i] = 0;
-    freg[i] = 0.0;
+    freg[i] = 0;
   }
 
   ram = (b32 *)malloc(sizeof(b32)*1024*8192);
@@ -181,7 +181,8 @@ int main(int argc, char *argv[]){
       }
     }
     if (print_flag){
-      printf("pc:%d\n", pc);
+      /*printf("pc:%d\n", pc);
+      printf("steps: %lld\n", step_counter);*/
       regs_dump_to_second_screen(pc);
 
       for (int i = 0; i < num_of_label; i++){
@@ -194,6 +195,7 @@ int main(int argc, char *argv[]){
         int label_disp = 0;
         fprintf(inst_output, "************\n");
         fprintf(inst_output, "pc:%d\n", pc);
+        fprintf(inst_output, "steps: %lld\n", step_counter);
         for (int i = 0; i < num_of_inst2; i++){
           if (i == label_pos[label_disp]){ //ラベルは無条件に表示
             fprintf(inst_output, "%s\n", label[label_disp]);
@@ -215,7 +217,7 @@ int main(int argc, char *argv[]){
     if (ign == 0){
       disp_func();
     }
-    step_counter++;
+
     reg[0] = 0;
     ir = ram[pc/4].i; //fetch instruction
     opcode = extract_opcode(ir);
@@ -608,8 +610,9 @@ int main(int argc, char *argv[]){
     }else if (ign < 0){
       ign = 0;
     }
-
+    step_counter++;
   }
+
   printf("total steps: %lld\n", step_counter);
   printf("last pc: %d\n", pc);
   printf("zero_add: %d", zero_add_counter);

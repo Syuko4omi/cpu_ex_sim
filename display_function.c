@@ -40,6 +40,7 @@ char mem_property[33];
 int print_flag;
 int bp;
 int stop;
+long long step_counter;
 
 void disp_func(){
   int flag = 0;
@@ -129,6 +130,7 @@ void disp_func(){
 void regs_dump_to_second_screen(int pc){
   fprintf(stderr, "************\n");
   fprintf(stderr, "pc:%d\n", pc);
+  printf("steps: %lld\n", step_counter);
   fprintf(stderr, "\n");
   for (int i = 0; i < 32; i++){
     fprintf(stderr, "[%s: %d] ", regname[i], reg[i]);
