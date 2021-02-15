@@ -135,7 +135,7 @@ fclass* _fadd(fclass a, fclass b){
   }
 
   // stage 3
-  if(gr * 2 + stick > 4 || (gr * 2 + stick == 4 && sign_xor == 0 && (midMan & (1 << 2)) == 1)){
+  if(gr * 2 + stick > 4 || (gr * 2 + stick == 4 && sign_xor == 0 && slice(midMan, 2, 2) == 1)){
     //round up
     if(slice(midMan, 24, 2) == (1 << 23) - 1){
       //繰り上がり

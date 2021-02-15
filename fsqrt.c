@@ -34,7 +34,10 @@ fclass* _fsqrt(fclass a, fclass b){
   }
 
   int rMan;
-  if(exp_even == 1 && slice(aMan, 22, 14) >= 64){
+  if(aExp == 0){
+    rMan = 0;
+  }
+  else if(exp_even == 1 && slice(aMan, 22, 14) >= 64){
     rMan = cnst + (1 << 22) + (ax >> 15);
   }
   else{

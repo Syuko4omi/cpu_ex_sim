@@ -11,6 +11,8 @@ fclass* _fdiv(fclass a, fclass b){
   int bExp = b.exp;
   int bMan = b.man;
 
+  int underflow = 0;
+
   //sign
   int rSign = aSign ^ bSign;
 
@@ -20,9 +22,19 @@ fclass* _fdiv(fclass a, fclass b){
     rExp = 0;
   }
   else{
-      if(bMan == (1 << 23)){
-      rExp = aExp + exp_sum_DIV - bExp;
-      rExp = slice(rExp, 7, 0);
+    if(bMan == (1 << 23)){
+      if(aExp + 127 < bExp){
+        rExp = 0;
+        underflow = 1;
+      }
+      else{
+        rExp = aExp + exp_sum_DIV - bExp;
+        rExp = slice(rExp, 7, 0);
+      }
+    }
+    else if(aExp + 126 < bExp){
+      rExp = 0;
+      underflow = 1;
     }
     else{
       rExp = aExp + exp_sum_DIV - bExp - 1;
@@ -54,7 +66,7 @@ fclass* _fdiv(fclass a, fclass b){
   }
 
   fclass* res;
-  if(rMan & (1 << 27)){
+  if(rMan & (1 << 27) && underflow == 0){
     res = newfclass_frombits(rSign, rExp+1, slice(rMan, 26, 4));
   }else{
     res = newfclass_frombits(rSign, rExp, slice(rMan, 25, 3));

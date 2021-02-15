@@ -37,7 +37,7 @@ fclass* _fmul(fclass a, fclass b){
     }
   }
   else{
-    if(slice(man, 2, 0) > (1 << 2)){
+    if(slice(man, 2, 0) >= (1 << 2)){
       res = newfclass_frombits(sign, slice(exp, 7, 0) + roundup2, slice(man, 25, 3) + 1);
     }
     else{
