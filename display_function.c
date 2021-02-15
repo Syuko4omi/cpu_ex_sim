@@ -68,7 +68,7 @@ void disp_func(){
           b32 cvt;
           cvt.f = freg[r_n];
           int2bin(cvt.i, bit_buf, 32);
-          printf("freg%d: %32s %f\n", r_n, bit_buf, freg[r_n]);
+          printf("freg%d: %32s %.10f\n", r_n, bit_buf, freg[r_n]);
         }else if (r_n == 32){
           for (int i = 0; i < 32; i++){
             printf("%f ", freg[i]);
