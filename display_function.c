@@ -44,7 +44,7 @@ long long step_counter;
 
 void disp_func(){
   int flag = 0;
-  printf("choose command from [reg <num>/freg <num>/mem <num>/e <num>/s <num>/func/help]\n");
+  printf("choose command from [reg <num>/freg <num>/mem <num>/e <num>/s <num>/es <num>/func/help]\n");
   while(flag == 0){
     char buf[10];
     unsigned int r_n;
@@ -90,6 +90,18 @@ void disp_func(){
             stop = 0;
             ign = r_n;
             flag = 1;
+            print_flag = 1;
+          }else{
+          printf("number of step must be at least 1.\n");
+        }
+      }
+      }else if (strcmp(buf, "es") == 0){
+        if (scanf("%d", &r_n) == 1){
+          if (r_n > 0){
+            stop = 0;
+            ign = r_n;
+            flag = 1;
+            print_flag = 0;
           }else{
           printf("number of step must be at least 1.\n");
         }
@@ -116,10 +128,12 @@ void disp_func(){
         printf("freg: display property of floating-point register (e.g. freg 5 -> show reg[FT5])\n");
         printf("mem: display property of memory (e.g. mem 1 -> show mem[1]).\n");
         printf("e: execute (e.g. e 4 -> execute 4 steps, pc += 16)\n");
+        printf("s: execute all steps. if pc < 0, then stop\n");
+        printf("es: execute, but not show regs info (e.g. es 4 -> execute 4 steps, pc += 16)\n");
         printf("func: display how many times each function has been executed\n");
         printf("**********************\n");
       }else{
-        printf("invalid command: choose command from [reg <num>/freg <num>/mem <num>/e <num>/func/help]\n");
+        printf("invalid command: choose command from [reg <num>/freg <num>/mem <num>/e <num>/s <num>/es <num>/func/help]\n");
       }
     }else{
       flag = 1;
